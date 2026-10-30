@@ -1,6 +1,6 @@
 # Rules
 
-- Backend: Node.js + Express, plain JavaScript (ES modules). Frontend: React.
+- Backend: Node.js + Express, plain JavaScript (ES modules). Frontend: React (JSX). The player, audio, wall, chart and stats widgets in `frontend/src` draw into containers React renders; new screens and controls should be React components.
 - Routes stay thin: they parse the request and call a service. Logic lives in `services/`, parsing in `parser/`.
 - Keep the folder layout in CLAUDE.md. New API areas go in `src/apps/<name>/<name>.routes.js`.
 - Any API change is written up in FRONTEND_API.md in the same change.

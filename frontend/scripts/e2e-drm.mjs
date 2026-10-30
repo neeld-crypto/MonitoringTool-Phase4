@@ -76,7 +76,7 @@ const license = createHttpServer(async (req, res) => {
 await new Promise((r) => license.listen(0, '127.0.0.1', r));
 const LIC = `http://127.0.0.1:${license.address().port}`;
 
-const vite = await createServer({ root, configFile: join(root, 'vite.config.ts'), server: { port: 5191, strictPort: false }, logLevel: 'error' });
+const vite = await createServer({ root, configFile: join(root, 'vite.config.js'), server: { port: 5191, strictPort: false }, logLevel: 'error' });
 await vite.listen();
 const base = vite.resolvedUrls.local[0];
 const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || undefined });

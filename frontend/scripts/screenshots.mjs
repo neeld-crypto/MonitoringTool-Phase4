@@ -20,7 +20,7 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const outDir = join(root, '..', 'docs', 'screenshots');
 mkdirSync(outDir, { recursive: true });
 
-const server = await createServer({ root, configFile: join(root, 'vite.config.ts'), server: { port: 5199, strictPort: false }, logLevel: 'error' });
+const server = await createServer({ root, configFile: join(root, 'vite.config.js'), server: { port: 5199, strictPort: false }, logLevel: 'error' });
 await server.listen();
 const base = server.resolvedUrls.local[0];
 console.log(`Dev server at ${base}`);

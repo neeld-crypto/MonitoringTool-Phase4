@@ -2,7 +2,7 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "simple-abr-player",
-  "main": "worker/index.ts",
+  "main": "worker/index.js",
   "compatibility_date": "2026-10-01",
   // The Vite build output. Files are served directly; only requests that
   // match no file (e.g. /__proxy/...) reach worker/index.ts.

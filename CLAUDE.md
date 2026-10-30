@@ -18,7 +18,12 @@ src/
   utilities/         shared helpers tied to this app (http, static files, desktop)
   utils/             small pure helpers
 test/                backend tests (Vitest, *.test.js)
-frontend/            React app (Vite); its own package.json and tests
+frontend/            React app (Vite, JavaScript / JSX); its own package.json and tests
+  src/App.jsx        screen layout and state (React)
+  src/components/    Topbar, Sidebar, SettingsPanel, TilesColumn, DetailColumn, Splitter
+  src/hooks/         useTheme
+  src/app/engine.js  starts the media and monitoring engines and bridges them to React
+  src/{player,audio,drm,scte,srt,ui}/  the player, audio analysis, DRM, SCTE-35, SRT client and the wall / chart / stats widgets
 deploy/linux/        Ubuntu helper scripts; scripts/ builds the Linux and Windows packages
 ```
 

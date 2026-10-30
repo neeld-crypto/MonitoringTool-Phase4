@@ -1,0 +1,41 @@
+{
+  "name": "playprobe",
+  "version": "1.0.0",
+  "private": true,
+  "description": "PlayProbe: play and inspect MPEG-DASH and HLS streams and monitor SRT feeds, with DRM (Widevine, FairPlay), SCTE-35, audio loudness, alerts and stats for nerds",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "sample": "node scripts/make-sample.mjs",
+    "screenshots": "node scripts/screenshots.mjs",
+    "deploy": "npm run build && wrangler deploy",
+    "test:e2e:drm": "node scripts/e2e-drm.mjs",
+    "start": "node --experimental-transform-types --disable-warning=ExperimentalWarning server/standalone.ts",
+    "preview": "vite preview",
+    "build:exe": "node scripts/build-exe.mjs",
+    "build:linux": "node scripts/build-linux.mjs"
+  },
+  "dependencies": {
+    "nodemailer": "^10.1.7",
+    "shaka-player": "^5.2.13"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.5",
+    "@types/nodemailer": "^8.0.2",
+    "esbuild": "^0.28.2",
+    "playwright": "^1.64.1",
+    "postject": "^1.0.0-alpha.6",
+    "typescript": "^5.9.3",
+    "undici": "^7.30.0",
+    "vite": "^8.3.4",
+    "vitest": "^5.0.4",
+    "wrangler": "^4.149.0"
+  },
+  "engines": {
+    "node": ">=22.12"
+  }
+}

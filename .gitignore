@@ -1,0 +1,12 @@
+node_modules/
+dist/
+*.log
+.DS_Store
+.vite/
+.wrangler/
+.playprobe/
+
+# SRT monitor daily logs
+logs/
+release/
+build/

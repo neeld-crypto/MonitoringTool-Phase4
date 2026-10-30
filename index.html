@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="dark light" />
+    <script>
+      // Apply the saved theme before first paint to avoid a flash.
+      try {
+        const t = localStorage.getItem('sap.theme.v1');
+        if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t;
+      } catch {}
+    </script>
+    <title>Skandha Media Services</title>
+    <meta name="description" content="Skandha Media Services: play and inspect MPEG-DASH and HLS streams and monitor SRT feeds (DRM, SCTE-35, audio loudness, alerts, stats for nerds)." />
+    <link rel="icon" href="favicon-32.png" sizes="32x32" type="image/png" />
+    <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-title" content="Skandha" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">
+        <img class="logo" src="skandha-logo.png" alt="Skandha Media Services" width="41" height="36" />
+        <span class="tagline">DASH · HLS · SRT · DRM · SCTE-35</span>
+      </div>
+      <form id="load-form" class="load-form" autocomplete="off">
+        <input id="url" type="url" list="url-history" required placeholder="Paste an MPEG-DASH (.mpd) or HLS (.m3u8) URL" aria-label="Stream URL" />
+        <datalist id="url-history"></datalist>
+      </form>
+      <div class="top-actions">
+        <button type="button" id="theme-btn" class="theme-btn"></button>
+        <button type="button" id="settings-btn" class="icon-btn" title="Load settings" aria-label="Load settings" aria-expanded="false"></button>
+      </div>
+    </header>
+
+    <section id="settings" class="settings" hidden>
+      <div class="field">
+        <label for="proxy-mode">CORS proxy</label>
+        <select id="proxy-mode">
+          <option value="auto">Auto — retry through the local proxy on network/CORS errors</option>
+          <option value="always">Always — send every request through the local proxy</option>
+          <option value="off">Off — fetch directly from the browser</option>
+        </select>
+        <small id="proxy-status"></small>
+      </div>
+      <div class="field">
+        <label for="headers">Custom request headers <small>(one per line, <code>Name: value</code>)</small></label>
+        <textarea id="headers" rows="3" placeholder="Authorization: Bearer …&#10;X-Custom: value"></textarea>
+      </div>
+      <div class="field checks">
+        <label><input type="checkbox" id="low-latency" /> Low-latency mode (LL-HLS / LL-DASH)</label>
+        <label><input type="checkbox" id="autoplay" /> Autoplay after load</label>
+      </div>
+    </section>
+
+    <section id="drm-panel" class="settings drm-panel" hidden aria-label="DRM settings"></section>
+
+    <main class="layout">
+      <aside class="side-bar" aria-label="Sources">
+        <button type="button" id="side-toggle" class="theme-btn side-toggle" aria-expanded="false" aria-controls="side-menu" title="Menu">☰ <span>Menu</span></button>
+        <div id="side-menu" class="side-menu" hidden>
+          <h2 class="side-title">Test streams</h2>
+          <select id="presets" aria-label="Test streams"></select>
+          <button type="submit" class="primary" id="load-btn" form="load-form">Load</button>
+          <button type="button" id="srt-btn" class="theme-btn" title="SRT monitoring (listener / caller, alerts)" aria-expanded="true"></button>
+          <button type="button" id="udp-btn" class="theme-btn" title="UDP / multicast monitoring (many groups at once)" aria-expanded="false"></button>
+          <button type="button" id="drm-btn" class="theme-btn" title="DRM settings (Widevine / FairPlay)" aria-expanded="false"></button>
+        </div>
+      </aside>
+
+      <section class="tiles-col" aria-label="Monitoring tiles">
+        <h2 class="col-title">Monitoring tiles</h2>
+        <section id="srt-panel" class="settings drm-panel" hidden aria-label="SRT monitoring"></section>
+        <p id="tiles-empty" class="tiles-empty muted" hidden>Monitoring tiles need the local Skandha server. Paste a URL above or pick a test stream.</p>
+        <div class="tiles-idle" aria-hidden="true">
+          <div class="idle-orbit"><span></span><span></span><span></span><img src="skandha-logo.png" alt="" width="132" height="116" /></div>
+          <div class="idle-title">Skandha Media Services</div>
+          <div class="idle-sub">Live stream monitoring</div>
+          <div class="idle-hint">Open <b>SRT</b> or <b>UDP</b> from the menu to start watching your channels</div>
+        </div>
+      </section>
+
+      <div
+        id="splitter"
+        class="splitter"
+        role="separator"
+        aria-orientation="vertical"
+        aria-label="Resize preview panel (drag, arrow keys, double-click to reset)"
+        title="Drag to resize · double-click to reset"
+        tabindex="0"
+      ></div>
+
+      <div id="detail-col" class="detail-col" hidden>
+        <section class="player-col">
+          <div class="col-head"><h2 class="col-title">Full preview</h2><button type="button" id="detail-close" class="detail-close" title="Close preview and analysis" aria-label="Close preview and analysis">×</button></div>
+          <div id="player" class="player" tabindex="-1">
+            <video id="video" playsinline></video>
+            <div id="ad-banner" class="ad-banner" hidden></div>
+            <div class="overlay-stack">
+              <div id="audio-overlay" class="audio-overlay" hidden></div>
+              <div id="nerd-overlay" class="nerd-overlay" hidden></div>
+            </div>
+            <div id="player-message" class="player-message">
+              <div>
+                <strong>Load a stream to start</strong>
+                <p>Paste a DASH or HLS URL above, or pick one of the test streams.</p>
+              </div>
+            </div>
+            <div id="spinner" class="spinner" hidden></div>
+            <div id="controls" class="controls"></div>
+          </div>
+          <div id="stream-summary" class="stream-summary"></div>
+        </section>
+
+        <aside class="stats-col">
+          <div class="stats-head">
+            <h2>Full analysis</h2>
+            <div class="stats-actions">
+              <button type="button" id="wall-btn" title="Back to the SRT / UDP multiviewer wall" hidden>↑ Wall</button>
+              <button type="button" id="share-btn" title="Copy a link that loads this stream">Copy link</button>
+              <button type="button" id="export-btn" title="Download stats, tracks, SCTE log and network log as JSON">Export JSON</button>
+            </div>
+          </div>
+          <nav id="tabs" class="tabs" role="tablist"></nav>
+          <div id="tab-body" class="tab-body"></div>
+        </aside>
+      </div>
+    </main>
+
+    <div id="toast" class="toast" role="status" hidden></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

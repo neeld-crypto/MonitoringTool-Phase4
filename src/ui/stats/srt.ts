@@ -35,7 +35,7 @@ export class SrtTab {
     const s = c.snapshot;
     this.chart.el.hidden = true;
     if (!c.available) {
-      this.body.replaceChildren(h('p', { class: 'muted' }, 'SRT monitoring runs on the local Skandha server (npm run dev / npm run preview) and is not available here.'));
+      this.body.replaceChildren(h('p', { class: 'muted' }, 'SRT monitoring runs on the local Pulse server (npm run dev / npm run preview) and is not available here.'));
       return;
     }
     if (!s || s.state === 'idle') {

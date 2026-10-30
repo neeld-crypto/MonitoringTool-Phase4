@@ -17,9 +17,9 @@ export interface LoadReport {
   loadavg: number[] | null;
   memUsedMB: number;
   memTotalMB: number;
-  /** The Skandha server itself. */
+  /** The Pulse server itself. */
   server: { cpuCores: number; memMB: number };
-  /** ffmpeg / srt-live-transmit started by Skandha (Linux and macOS only). */
+  /** ffmpeg / srt-live-transmit started by Pulse (Linux and macOS only). */
   children: ProcessLoad[] | null;
 }
 

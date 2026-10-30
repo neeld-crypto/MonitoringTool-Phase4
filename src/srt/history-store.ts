@@ -58,7 +58,7 @@ const request = <T>(r: IDBRequest<T>) => new Promise<T | null>((res) => {
 
 /**
  * Keeps channel history in this browser (IndexedDB) so the chart can look back past the live window and past a
- * page reload. It only records while Skandha is open. Failures (private mode, storage off) are silent: the
+ * page reload. It only records while Pulse is open. Failures (private mode, storage off) are silent: the
  * live chart keeps working from memory.
  */
 class HistoryStore {

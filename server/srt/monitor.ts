@@ -390,7 +390,7 @@ export class SrtMonitor {
       key: 'test',
       severity: 'warning',
       state: 'event',
-      message: `This is a test notification from Skandha SRT monitoring${c ? ` for "${c.name}"` : ''}.`,
+      message: `This is a test notification from Pulse SRT monitoring${c ? ` for "${c.name}"` : ''}.`,
       at: Date.now(),
       ...(c ? { channelId: c.id, channelName: c.name } : {}),
     };

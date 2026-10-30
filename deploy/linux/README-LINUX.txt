@@ -1,4 +1,4 @@
-Skandha Media Services on Ubuntu
+Pulse on Ubuntu
 ============================
 
 1. Copy and unpack (from your Windows PC, e.g. with pscp from the PuTTY package, or WinSCP):

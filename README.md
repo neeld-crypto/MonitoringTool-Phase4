@@ -2,7 +2,7 @@
   <img src="public/skandha-logo.png" alt="Skandha Media Services" width="140">
 </p>
 
-# MonitoringTool – Phase 4
+# Pulse
 
 Skandha Media Services stream player and live monitoring wall. Plays MPEG-DASH and HLS (with DRM and SCTE-35 inspection) and monitors many SRT, UDP/multicast and HLS channels at once, with alerts and history.
 

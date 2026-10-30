@@ -15,7 +15,7 @@ const WINDOWS: [string, number][] = [
 ];
 /** The live in-memory history covers this much, so shorter live windows need no stored data. */
 const MEMORY_MS = 170e3;
-/** Samples further apart than this are drawn as a gap (Skandha was closed or the channel stopped). */
+/** Samples further apart than this are drawn as a gap (Pulse was closed or the channel stopped). */
 const GAP_MS = 30e3;
 
 const SEVERITY_COLOR = { critical: '#ef4444', warning: '#f59e0b', info: '#3b82f6' } as const;

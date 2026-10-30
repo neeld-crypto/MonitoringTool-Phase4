@@ -44,7 +44,7 @@ export class SrtPanel {
   private deleteBtn = h('button', { type: 'button', class: 'danger', onclick: () => void this.remove() }, 'Delete channel');
   private startAllBtn = h('button', { type: 'button', onclick: () => void this.startAll() }, 'Start all');
   private stopAllBtn = h('button', { type: 'button', onclick: () => void this.stopAll() }, 'Stop all');
-  private quitBtn = h('button', { type: 'button', hidden: true, onclick: () => void this.quit() }, 'Quit Skandha');
+  private quitBtn = h('button', { type: 'button', hidden: true, onclick: () => void this.quit() }, 'Quit Pulse');
   private urlHint = h('small', { class: 'muted' });
   private status = h('div', { class: 'srt-status' });
   private notice = h('div', { class: 'srt-notice' });
@@ -263,7 +263,7 @@ export class SrtPanel {
         const gb = (mb: number) => (mb / 1024).toFixed(1);
         const parts = [
           `Machine: CPU ${r.cpuPct.toFixed(0)}% of ${r.cores} cores${r.loadavg ? ` (load ${r.loadavg[0]})` : ''} · RAM ${gb(r.memUsedMB)} / ${gb(r.memTotalMB)} GB`,
-          `Skandha server: ${(r.server.cpuCores).toFixed(0)}% of one core · ${r.server.memMB} MB`,
+          `Pulse server: ${(r.server.cpuCores).toFixed(0)}% of one core · ${r.server.memMB} MB`,
           ...(r.children ?? []).map((c) => `${c.name} ×${c.count}: ${c.cpuCores.toFixed(0)}% of one core · ${c.memMB} MB`),
         ];
         this.loadInfo.textContent = parts.join('   |   ');
@@ -277,9 +277,9 @@ export class SrtPanel {
 
   private async quit() {
     const running = this.client.channels.filter((c) => this.client.isRunning(c)).length;
-    if (!confirm(running ? `Quit Skandha? This stops ${running} running channel${running === 1 ? '' : 's'} and alerts will no longer be sent.` : 'Quit Skandha?')) return;
+    if (!confirm(running ? `Quit Pulse? This stops ${running} running channel${running === 1 ? '' : 's'} and alerts will no longer be sent.` : 'Quit Pulse?')) return;
     await fetch('/__app/quit', { method: 'POST' }).catch(() => undefined);
-    document.body.innerHTML = '<p style="font:16px system-ui;padding:32px">Skandha has quit. You can close this window.</p>';
+    document.body.innerHTML = '<p style="font:16px system-ui;padding:32px">Pulse has quit. You can close this window.</p>';
     window.close();
   }
 
@@ -562,11 +562,11 @@ export class SrtPanel {
 
     const notes: (Node | string)[] = [];
     if (!c.available) {
-      notes.push('SRT / UDP / HLS monitoring needs the local Skandha server (npm run dev or npm run preview). It is not available on static hosting, because browsers cannot open SRT connections.');
+      notes.push('SRT / UDP / HLS monitoring needs the local Pulse server (npm run dev or npm run preview). It is not available on static hosting, because browsers cannot open SRT connections.');
     } else if (!c.ffmpeg) {
       notes.push('ffmpeg was not found. Install ffmpeg (with SRT support) or set FFMPEG_PATH, then restart the server.');
     } else if (!c.connected) {
-      notes.push('Lost the connection to the Skandha server (it may have been closed). Start it again (npm run dev, or PlayProbe.exe) and reload this page; running channels stop when the server stops.');
+      notes.push('Lost the connection to the Pulse server (it may have been closed). Start it again (npm run dev, or PlayProbe.exe) and reload this page; running channels stop when the server stops.');
     } else if (!c.srtLiveTransmit && cur?.kind === 'srt') {
       notes.push(
         h('strong', null, 'Basic mode: '),

@@ -62,7 +62,7 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
       body: body === undefined ? undefined : JSON.stringify(body),
     });
   } catch {
-    throw new Error('Cannot reach the Skandha server. Make sure it is still running (npm run dev, or PlayProbe.exe) and that this page was opened from it.');
+    throw new Error('Cannot reach the Pulse server. Make sure it is still running (npm run dev, or PlayProbe.exe) and that this page was opened from it.');
   }
   const data = (await res.json().catch(() => ({}))) as T & { error?: string };
   if (!res.ok) throw new Error(data.error ?? `${res.status} ${res.statusText}`);

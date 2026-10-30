@@ -2,7 +2,7 @@ import { SEVERITY_RANK, type Alert, type NotifySettings } from '../../src/srt/ty
 
 const ICON = { critical: '🔴', warning: '🟠', info: 'ℹ️' } as const;
 
-export function describeAlert(a: Alert, host = 'Skandha'): { title: string; text: string } {
+export function describeAlert(a: Alert, host = 'Pulse'): { title: string; text: string } {
   const recovered = a.state === 'cleared';
   const icon = recovered ? '✅' : ICON[a.severity];
   const label = recovered ? 'RECOVERED' : a.severity.toUpperCase();

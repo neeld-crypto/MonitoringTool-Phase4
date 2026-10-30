@@ -8,7 +8,7 @@ import { corsProxyMiddleware } from './proxy-plugin.ts';
 import { createSrtMiddleware, json, sameOrigin } from './srt/srt-plugin.ts';
 
 /**
- * Skandha without Vite. Serves the built app and the same SRT / UDP and CORS-proxy APIs the dev
+ * Pulse without Vite. Serves the built app and the same SRT / UDP and CORS-proxy APIs the dev
  * server has. Runs two ways:
  *
  *   npm start        from the project (serves ./dist; build first with `npm run build`)
@@ -48,7 +48,7 @@ function reportFatal(message: string) {
 
 const quitMode = process.argv.includes('--quit');
 if (quitMode) {
-  // Ask a running instance to quit (the uninstaller and the "Stop Skandha" shortcut use this).
+  // Ask a running instance to quit (the uninstaller and the "Stop Pulse" shortcut use this).
   void fetch(`${url}__app/quit`, { method: 'POST' })
     .catch(() => undefined)
     .finally(() => process.exit(0));
@@ -161,7 +161,7 @@ function openWindow() {
 }
 
 if (!quitMode) server.listen(port, host, () => {
-  console.log(`Skandha is running at ${url}`);
+  console.log(`Pulse is running at ${url}`);
   console.log(`ffmpeg: ${process.env.FFMPEG_PATH ?? 'from PATH'}`);
   console.log('Press Ctrl+C to stop it and every SRT / UDP channel.');
   if (embedded && process.env.PLAYPROBE_NO_BROWSER !== '1') openWindow();

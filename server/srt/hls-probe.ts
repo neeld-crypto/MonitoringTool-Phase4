@@ -140,7 +140,7 @@ export function parseMedia(text: string): MediaPlaylist | null {
 const TIMEOUT_MS = 8000;
 
 async function fetchText(url: string): Promise<string> {
-  const res = await fetch(url, { signal: AbortSignal.timeout(TIMEOUT_MS), headers: { 'user-agent': 'Skandha', accept: '*/*' }, redirect: 'follow' });
+  const res = await fetch(url, { signal: AbortSignal.timeout(TIMEOUT_MS), headers: { 'user-agent': 'Pulse', accept: '*/*' }, redirect: 'follow' });
   if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`.trim());
   return res.text();
 }

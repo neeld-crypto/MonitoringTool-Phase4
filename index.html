@@ -11,16 +11,17 @@
         if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t;
       } catch {}
     </script>
-    <title>Skandha Media Services</title>
-    <meta name="description" content="Skandha Media Services: play and inspect MPEG-DASH and HLS streams and monitor SRT feeds (DRM, SCTE-35, audio loudness, alerts, stats for nerds)." />
+    <title>Pulse</title>
+    <meta name="description" content="Pulse: play and inspect MPEG-DASH and HLS streams and monitor SRT feeds (DRM, SCTE-35, audio loudness, alerts, stats for nerds)." />
     <link rel="icon" href="favicon-32.png" sizes="32x32" type="image/png" />
     <link rel="apple-touch-icon" href="apple-touch-icon.png" />
-    <meta name="apple-mobile-web-app-title" content="Skandha" />
+    <meta name="apple-mobile-web-app-title" content="Pulse" />
   </head>
   <body>
     <header class="topbar">
       <div class="brand">
         <img class="logo" src="skandha-logo.png" alt="Skandha Media Services" width="41" height="36" />
+        <span class="brand-name">Pulse</span>
         <span class="tagline">DASH · HLS · SRT · DRM · SCTE-35</span>
       </div>
       <form id="load-form" class="load-form" autocomplete="off">
@@ -71,7 +72,7 @@
       <section class="tiles-col" aria-label="Monitoring tiles">
         <h2 class="col-title">Monitoring tiles</h2>
         <section id="srt-panel" class="settings drm-panel" hidden aria-label="SRT monitoring"></section>
-        <p id="tiles-empty" class="tiles-empty muted" hidden>Monitoring tiles need the local Skandha server. Paste a URL above or pick a test stream.</p>
+        <p id="tiles-empty" class="tiles-empty muted" hidden>Monitoring tiles need the local Pulse server. Paste a URL above or pick a test stream.</p>
         <div class="tiles-idle" aria-hidden="true">
           <div class="idle-orbit"><span></span><span></span><span></span><img src="skandha-logo.png" alt="" width="132" height="116" /></div>
           <div class="idle-title">Skandha Media Services</div>

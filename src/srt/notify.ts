@@ -74,7 +74,7 @@ export function deliver(a: Alert, prefs: AlertPrefs, toast: (text: string) => vo
   if (prefs.sound) beep(a.severity);
   if (prefs.desktop && a.severity !== 'info' && 'Notification' in window && Notification.permission === 'granted') {
     try {
-      new Notification(`Skandha SRT${a.channelName ? ` · ${a.channelName}` : ''}: ${a.severity}`, { body: a.message, tag: `${a.channelId ?? 0}:${a.key}` });
+      new Notification(`Pulse SRT${a.channelName ? ` · ${a.channelName}` : ''}: ${a.severity}`, { body: a.message, tag: `${a.channelId ?? 0}:${a.key}` });
     } catch {
       /* some browsers only allow notifications from a service worker */
     }

@@ -18,17 +18,17 @@ console.log('2/3 bundling the server');
 rmSync(out, { recursive: true, force: true });
 mkdirSync(out, { recursive: true });
 await build({
-  entryPoints: [join(root, 'server', 'standalone.ts')],
+  entryPoints: [join(root, 'server.js')],
   outfile: join(out, 'server.cjs'),
   bundle: true,
   platform: 'node',
   format: 'cjs',
   target: 'node22',
   // import.meta.url is not used on the server: PLAYPROBE_HOME (set by start.sh) names the folder.
-  define: { 'import.meta.url': '"file:///playprobe/server/standalone.ts"' },
+  define: { 'import.meta.url': '"file:///playprobe/server.js"' },
   logLevel: 'warning',
 });
-cpSync(join(root, 'dist'), join(out, 'dist'), { recursive: true });
+cpSync(join(root, 'frontend', 'dist'), join(out, 'dist'), { recursive: true });
 // Shell scripts must use LF line endings.
 for (const f of readdirSync(join(root, 'deploy', 'linux'))) {
   writeFileSync(join(out, f), readFileSync(join(root, 'deploy', 'linux', f), 'utf8').replace(/\r\n/g, '\n'));

@@ -28,14 +28,14 @@ console.log('2/5 bundling the server');
 rmSync(work, { recursive: true, force: true });
 mkdirSync(work, { recursive: true });
 await build({
-  entryPoints: [join(root, 'server', 'standalone.ts')],
+  entryPoints: [join(root, 'server.js')],
   outfile: join(work, 'app.cjs'),
   bundle: true,
   platform: 'node',
   format: 'cjs',
   target: 'node22',
   // import.meta.url is only read when not running as the executable.
-  define: { 'import.meta.url': '"file:///playprobe-embedded/server/standalone.ts"' },
+  define: { 'import.meta.url': '"file:///playprobe-embedded/server.js"' },
   logLevel: 'warning',
 });
 
@@ -45,12 +45,12 @@ const files = [];
   for (const name of readdirSync(dir)) {
     const p = join(dir, name);
     if (statSync(p).isDirectory()) walk(p);
-    else files.push(relative(join(root, 'dist'), p).replace(/\\/g, '/'));
+    else files.push(relative(join(root, 'frontend', 'dist'), p).replace(/\\/g, '/'));
   }
-})(join(root, 'dist'));
+})(join(root, 'frontend', 'dist'));
 writeFileSync(join(work, 'manifest.json'), JSON.stringify(files));
 const assets = { 'manifest.json': join(work, 'manifest.json') };
-for (const f of files) assets[f] = join(root, 'dist', f);
+for (const f of files) assets[f] = join(root, 'frontend', 'dist', f);
 writeFileSync(
   join(work, 'sea-config.json'),
   JSON.stringify({ main: join(work, 'app.cjs'), output: join(work, 'sea.blob'), disableExperimentalSEAWarning: true, useCodeCache: false, assets }),

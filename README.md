@@ -15,14 +15,14 @@ Skandha Media Services stream player and live monitoring wall. Plays MPEG-DASH a
 
 ## Run
 
-Requires Node 22.12+, and ffmpeg for SRT / UDP monitoring.
+Node.js + Express backend (root) and a frontend in `frontend/`. Requires Node 22.12+, and ffmpeg for SRT / UDP monitoring. Layout and rules: [CLAUDE.md](CLAUDE.md); HTTP API: [FRONTEND_API.md](FRONTEND_API.md).
 
 ```bash
-npm install
-npm run dev        # development, http://localhost:5173
-npm run build      # production build
-npm start          # serve the build with the monitoring server (port 4173)
-npm test           # unit tests
+npm run install:all   # backend + frontend dependencies
+npm run build         # builds the frontend
+npm start             # http://localhost:4173
+npm test              # backend tests;  npm run test:frontend for the frontend
+npm run dev           # backend with reload; in another terminal: npm --prefix frontend run dev (port 5173)
 ```
 
 ## Package for a server

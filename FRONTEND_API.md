@@ -20,6 +20,7 @@ Every call that changes something returns the full status object.
 | GET | `/__srt/status` | | capabilities, channel snapshots, alert history, settings |
 | GET | `/__srt/events` | | server-sent events: `status`, `snapshot`, `alert`, `scte`, `log`, `notify` |
 | GET | `/__srt/load` | | CPU / memory of the machine, the server and its ffmpeg processes |
+| GET | `/__srt/interfaces` | | IPv4 network cards of the server's machine: `{ interfaces: [{ name, address, internal }] }` (for the UDP form's interface list) |
 | POST | `/__srt/channels` | `{ kind: 'srt' \| 'udp' \| 'hls', name? }` | add a channel |
 | POST | `/__srt/bulk` | `{ items: [{ name?, config }], start }` | add many, optionally start them |
 | POST | `/__srt/ch/:id/start` | `SrtConfig` | start a channel |

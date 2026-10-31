@@ -52,6 +52,10 @@ export class SrtPanel {
   stopAllBtn = h('button', { type: 'button', onclick: () => void this.stopAll() }, 'Stop all');
   quitBtn = h('button', { type: 'button', hidden: true, onclick: () => void this.quit() }, 'Quit Pulse');
   urlHint = h('small', { class: 'muted' });
+  /** UDP only: the network card of the computer running the server that joins the multicast group. */
+  ifaceSel = h('select', { 'aria-label': 'Network interface' });
+  ifaceField = field('Network interface', this.ifaceSel, '(the network card of the computer running Pulse, e.g. this laptop or the Ubuntu server)');
+  interfaces = [];
   status = h('div', { class: 'srt-status' });
   notice = h('div', { class: 'srt-notice' });
   logInfo = h('small', { class: 'muted' });
@@ -200,6 +204,7 @@ export class SrtPanel {
         field('Address', this.address, '(srt://…, udp://@… or an https://….m3u8 playlist: the same format as above)'),
       ),
       this.urlHint,
+      h('div', { class: 'drm-grid' }, this.ifaceField),
       h(
         'label',
         { class: 'srt-check' },
@@ -218,6 +223,7 @@ export class SrtPanel {
       this.manualItem,
     );
     this.address.addEventListener('input', () => this.renderMode());
+    this.ifaceSel.addEventListener('change', () => this.pickInterface());
     this.address.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' && !this.startBtn.disabled) void this.start();
     });
@@ -232,6 +238,7 @@ export class SrtPanel {
     client.on('cpu', () => this.renderCpu());
     client.on('notice', (n) => this.hooks.toast(n.text));
     this.sync();
+    void this.loadInterfaces();
     this.pollLoad();
     // Only the desktop app (PlayProbe.exe) has a process to quit.
     fetch('/__app/info')
@@ -406,9 +413,44 @@ export class SrtPanel {
     this.light.checked = ch.config?.lightAnalysis !== false;
     this.renderMode();
   }
+  /** Asks the server for its network cards (they differ per machine: laptop, Ubuntu server, …). */
+  async loadInterfaces() {
+    try {
+      const r = await fetch('/__srt/interfaces');
+      if (!r.ok) return;
+      this.interfaces = (await r.json()).interfaces ?? [];
+    } catch {
+      return;
+    }
+    this.renderInterfaces();
+  }
+  renderInterfaces() {
+    const parsed = this.address.value.trim() ? parseStreamUrl(this.address.value) : null;
+    const chosen = parsed && !('error' in parsed) && parsed.mode === 'multicast' ? (parsed.iface ?? '') : '';
+    const options = [option('', 'Choose a network interface…')];
+    for (const i of this.interfaces) options.push(option(i.address, `${i.name} · ${i.address}${i.internal ? ' (loopback)' : ''}`));
+    if (chosen && !this.interfaces.some((i) => i.address === chosen)) options.push(option(chosen, `${chosen} (not found on this computer)`));
+    clear(this.ifaceSel);
+    this.ifaceSel.append(...options);
+    this.ifaceSel.value = chosen;
+  }
+  /** Writes the chosen card into the address as ?localaddr=<ip>, which is what the server joins the group on. */
+  pickInterface() {
+    const parsed = this.address.value.trim() ? parseStreamUrl(this.address.value) : null;
+    if (!parsed || 'error' in parsed || parsed.mode !== 'multicast') {
+      this.ifaceSel.value = '';
+      this.hooks.toast('Type the multicast group and port first, e.g. udp://@239.1.1.1:5000');
+      return;
+    }
+    const { iface: _old, ...rest } = parsed;
+    this.address.value = formatStreamUrl(this.ifaceSel.value ? { ...rest, iface: this.ifaceSel.value } : rest);
+    this.renderMode();
+  }
   renderMode() {
     const kind = this.client.current?.kind ?? 'srt';
     const udp = kind === 'udp';
+    this.ifaceField.hidden = !udp;
+    if (udp) this.renderInterfaces();
     this.address.placeholder = udp
       ? 'udp://@239.1.1.1:5000'
       : kind === 'hls'
@@ -446,6 +488,7 @@ export class SrtPanel {
       return {
         error: `This is ${KIND_WITH_ARTICLE[kind]} channel: use ${KIND_ADDRESS[kind]} address. Add other kinds in the Add channels box.`,
       };
+    if (parsed.mode === 'multicast' && !parsed.iface) return { error: 'Choose the network interface this UDP stream arrives on.' };
     return { ...parsed, transcodePreview: this.transcode.checked, lightAnalysis: this.light.checked };
   }
   async rename() {

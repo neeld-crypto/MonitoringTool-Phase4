@@ -5,6 +5,7 @@ import { config } from '../../config/index.js';
 import { HLS_MIME, MAX_JSON_BYTES } from '../../constants/index.js';
 import { getMonitor } from '../../services/srt/index.js';
 import { loadReport } from '../../services/srt/load.js';
+import { listInterfaces } from '../../utilities/network.js';
 import { json, requireSameOrigin } from '../../utilities/http.js';
 
 /**
@@ -34,6 +35,8 @@ const unknown = (res) => json(res, 404, { error: 'Unknown SRT endpoint' });
 srtRouter.get('/status', route((m, req, res) => json(res, 200, m.status())));
 srtRouter.get('/events', route((m, req, res) => m.addClient(res)));
 srtRouter.get('/load', route(async (m, req, res) => json(res, 200, await loadReport())));
+/** The network cards of the machine the server runs on (IPv4), for the UDP form's interface list. */
+srtRouter.get('/interfaces', route((m, req, res) => json(res, 200, { interfaces: listInterfaces() })));
 
 /** HLS preview written by ffmpeg: /__srt/hls/ch<n>/<file>. */
 srtRouter.get(

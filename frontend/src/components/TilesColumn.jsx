@@ -8,6 +8,7 @@ export default function TilesColumn({ tilesEmpty }) {
       <h2 className="col-title">Monitoring tiles</h2>
       {/* The wall fills this section itself; React only renders the empty, initially hidden container. */}
       <section id="srt-panel" className="settings drm-panel" hidden aria-label="SRT monitoring" />
+      <section id="layout-panel" className="settings drm-panel" hidden aria-label="Layouts" />
       <p id="tiles-empty" className="tiles-empty muted" hidden={!tilesEmpty}>
         Monitoring tiles need the local Pulse server. Paste a URL above or pick a test stream.
       </p>

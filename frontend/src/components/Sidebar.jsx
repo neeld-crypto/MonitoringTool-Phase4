@@ -1,11 +1,12 @@
 import { icons } from '../ui/icons';
 import Icon from './Icon';
 
-/** Collapsible left menu: test streams, Load, SRT, UDP and DRM. */
+/** Collapsible left menu: test streams, Load, SRT, UDP, Layouts and DRM. */
 export default function Sidebar({ open, onToggle, presetList, onPreset, srtInfo, view, drm, onView, onToggleDrm }) {
   const groups = [...new Set(presetList.map((p) => p.group))];
   const { srt, udp } = srtInfo;
   const srtOpen = view.open && view.view === 'all';
+  const layoutsOpen = view.open && view.view === 'layouts';
   const udpOpen = view.open && view.view === 'udp';
   return (
     <aside className="side-bar" aria-label="Sources">
@@ -55,6 +56,17 @@ export default function Sidebar({ open, onToggle, presetList, onPreset, srtInfo,
             UDP{udp.total ? ` ${udp.running}/${udp.total}` : ''}
             {udp.alerts ? ` · ${udp.alerts}` : ''}
           </span>
+        </button>
+        <button
+          type="button"
+          id="layouts-btn"
+          className={`theme-btn${layoutsOpen ? ' current' : ''}`}
+          title="Layouts: arrange your channels on a screen (presets or by hand) and show them fullscreen"
+          aria-expanded={layoutsOpen}
+          onClick={() => onView('layouts')}
+        >
+          <Icon html={icons.layouts} />
+          <span>Layouts</span>
         </button>
         <button
           type="button"

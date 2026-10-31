@@ -25,6 +25,7 @@ export const icons = {
   udp: svg(
     '<path d="M3 12h4l2-6 4 12 2-6h6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>',
   ),
+  layouts: svg('<path d="M3 3h8v10H3V3zm10 0h8v6h-8V3zM3 15h8v6H3v-6zm10-4h8v10h-8V11z"/>'),
   lock: svg(
     '<path d="M17 9V7A5 5 0 0 0 7 7v2a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2zM9 7a3 3 0 0 1 6 0v2H9V7zm4 9.73V18h-2v-1.27a2 2 0 1 1 2 0z"/>',
   ),

@@ -2,7 +2,7 @@
 
 The Express backend (`server.js`, port 4173) serves the built frontend and these endpoints. All of them are for local / trusted-network use and have no login. Requests with a foreign `Origin` are refused (403). Errors are `{ "error": "message" }` with status 400, 403 or 404.
 
-In development the Vite server (port 5173) proxies `/__srt`, `/__proxy` and `/__app` to the backend (`BACKEND_URL`, default `http://127.0.0.1:4173`).
+In development the Vite server (port 5173) proxies `/__srt`, `/__proxy`, `/__app` and `/__layouts` to the backend (`BACKEND_URL`, default `http://127.0.0.1:4173`).
 
 ## System (`/__app`)
 
@@ -10,6 +10,15 @@ In development the Vite server (port 5173) proxies `/__srt`, `/__proxy` and `/__
 | --- | --- | --- |
 | GET | `/__app/info` | `{ desktop }`: true when the single-file executable is running |
 | POST | `/__app/quit` | stops the server (executable only) |
+
+## Layouts (`/__layouts`)
+
+Saved arrangements of channels on a screen, stored in `.playprobe/layouts.json`. A layout is `{ id, name, aspect, cells }`: `aspect` is `16x9`, `4x3`, `21x9` or `1x1`, and each cell is `{ x, y, w, h, channel }` on a 24 × 24 grid (`channel` is a channel id or null).
+
+| Method | Path | Body | Result |
+| --- | --- | --- | --- |
+| GET | `/__layouts` | | `{ layouts }` |
+| PUT | `/__layouts` | `{ layouts }` | replaces the whole list (at most 64 layouts of 64 cells); returns `{ layouts }` |
 
 ## Monitoring (`/__srt`)
 

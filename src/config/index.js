@@ -44,6 +44,7 @@ export const config = {
   ffmpegPath: process.env.FFMPEG_PATH || 'ffmpeg',
   previewDir: join(tmpdir(), 'playprobe-srt-preview'),
   settingsPath: join(appDir, '.playprobe', 'srt-settings.json'),
+  layoutsPath: join(appDir, '.playprobe', 'layouts.json'),
   logDir: join(appDir, 'logs'),
   noBrowser: process.env.PLAYPROBE_NO_BROWSER === '1',
 };

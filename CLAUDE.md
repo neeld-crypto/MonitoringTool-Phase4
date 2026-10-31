@@ -9,7 +9,7 @@ server.js            entry: starts the server
 src/
   index.js           start(): listen, shutdown, desktop-app behaviour
   app.js             Express app: mounts the routers and serves the frontend
-  apps/              one folder per API area (routes only): srt, proxy, system
+  apps/              one folder per API area (routes only): srt, proxy, system, layouts
   config/            environment and paths
   constants/         MIME types, limits, SRT / alert defaults
   libraries/         wrappers around external tools
@@ -23,7 +23,7 @@ frontend/            React app (Vite, JavaScript / JSX); its own package.json an
   src/components/    Topbar, Sidebar, SettingsPanel, TilesColumn, DetailColumn, Splitter
   src/hooks/         useTheme
   src/app/engine.js  starts the media and monitoring engines and bridges them to React
-  src/{player,audio,drm,scte,srt,ui}/  the player, audio analysis, DRM, SCTE-35, SRT client and the wall / chart / stats widgets
+  src/{player,audio,drm,scte,srt,layouts,ui}/  the player, audio analysis, DRM, SCTE-35, SRT client, wall layouts (presets, saved arrangements) and the wall / chart / stats widgets
 deploy/linux/        Ubuntu helper scripts; scripts/ builds the Linux and Windows packages
 ```
 

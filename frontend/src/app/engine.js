@@ -13,6 +13,7 @@ import { DrmPanel } from '../ui/drm/panel';
 import { formatBitrate, formatTime } from '../ui/format';
 import { snapshot } from '../ui/stats/overview';
 import { StatsPanel } from '../ui/stats/panel';
+import { LayoutsPanel } from '../ui/layouts/panel';
 import { SrtPanel } from '../ui/srt/panel';
 
 const DRM_LABEL = { auto: 'DRM auto', widevine: 'Widevine', fairplay: 'FairPlay', off: 'DRM' };
@@ -71,19 +72,28 @@ export async function startEngine(ui) {
 
   const srt = new SrtClient();
   let srtPanel;
+  let layoutPanel;
   const srtPanelHost = $('#srt-panel');
   let srtPreviewShown = false;
 
   function syncViewButtons() {
-    ui.setView({ open: srtPanel.isOpen, view: srtPanel.view });
+    ui.setView({ open: srtPanel.isOpen || layoutPanel.isOpen, view: layoutPanel.isOpen ? 'layouts' : srtPanel.view });
   }
   /** SRT opens the all-channels wall, UDP the same wall showing only UDP channels; the open one closes when pressed again. */
   function openView(view) {
-    if (srtPanel.isOpen && srtPanel.view === view) srtPanel.toggle(false);
-    else srtPanel.showView(view);
+    if (view === 'layouts') {
+      const open = !layoutPanel.isOpen;
+      if (open) srtPanel.toggle(false);
+      layoutPanel.toggle(open);
+    } else {
+      layoutPanel.toggle(false);
+      if (srtPanel.isOpen && srtPanel.view === view) srtPanel.toggle(false);
+      else srtPanel.showView(view);
+    }
     syncViewButtons();
   }
   function showWall() {
+    layoutPanel.toggle(false);
     srtPanel.showView(srtPanel.view);
     syncViewButtons();
     $('#srt-panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -305,7 +315,7 @@ export async function startEngine(ui) {
   }
 
   // SRT monitoring panel and tiles. A tile click opens the preview and analysis column.
-  srtPanel = new SrtPanel(srtPanelHost, srt, {
+  const srtHooks = {
     toast: (m) => ui.toast(m, 4000),
     onSelect: (id) => {
       showDetail();
@@ -321,6 +331,16 @@ export async function startEngine(ui) {
     },
     // A tile click: the wall can be taller than the screen, so bring the player and the analysis tabs into view.
     reveal: () => $('#detail-col').scrollIntoView({ behavior: 'smooth', block: 'nearest' }),
+  };
+  srtPanel = new SrtPanel(srtPanelHost, srt, srtHooks);
+  // Layouts: saved arrangements of the same channels. Picking a tile there opens the preview like on the wall.
+  layoutPanel = new LayoutsPanel($('#layout-panel'), srt, {
+    toast: srtHooks.toast,
+    onPick: (id) => {
+      srt.select(id);
+      srtHooks.onSelect(id);
+      srtHooks.reveal();
+    },
   });
 
   // SRT: play the server's HLS preview of the incoming feed, route alerts to the user, and

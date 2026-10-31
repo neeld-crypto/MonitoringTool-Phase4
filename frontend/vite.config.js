@@ -14,6 +14,7 @@ export default defineConfig({
       '/__srt': { target: backend, changeOrigin: false },
       '/__proxy': { target: backend, changeOrigin: false },
       '/__app': { target: backend, changeOrigin: false },
+      '/__layouts': { target: backend, changeOrigin: false },
     },
   },
   preview: { port: 4174 },

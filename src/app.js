@@ -1,4 +1,5 @@
 import express from 'express';
+import { layoutsRouter } from './apps/layouts/layouts.routes.js';
 import { corsProxyHandler } from './apps/proxy/proxy.routes.js';
 import { srtRouter } from './apps/srt/srt.routes.js';
 import { createSystemRouter } from './apps/system/system.routes.js';
@@ -16,6 +17,7 @@ export function createApp({ onQuit }) {
   app.use('/__app', createSystemRouter({ onQuit }));
   app.use('/__proxy', corsProxyHandler);
   app.use('/__srt', srtRouter);
+  app.use('/__layouts', layoutsRouter);
   app.use(staticMiddleware({ dist: config.dist, embedded: config.embedded }));
 
   // Anything that escapes a handler.

@@ -56,6 +56,7 @@ export class SrtPanel {
   ifaceSel = h('select', { 'aria-label': 'Network interface' });
   ifaceField = field('Network interface', this.ifaceSel, '(the network card of the computer running Pulse, e.g. this laptop or the Ubuntu server)');
   interfaces = [];
+  interfacesError = '';
   status = h('div', { class: 'srt-status' });
   notice = h('div', { class: 'srt-notice' });
   logInfo = h('small', { class: 'muted' });
@@ -415,19 +416,21 @@ export class SrtPanel {
   }
   /** Asks the server for its network cards (they differ per machine: laptop, Ubuntu server, …). */
   async loadInterfaces() {
+    this.interfacesError = '';
     try {
-      const r = await fetch('/__srt/interfaces');
-      if (!r.ok) return;
-      this.interfaces = (await r.json()).interfaces ?? [];
-    } catch {
-      return;
+      const r = await fetch('/__srt/interfaces', { cache: 'no-store' });
+      const body = await r.json().catch(() => ({}));
+      if (!r.ok || !Array.isArray(body.interfaces)) throw new Error(body.error ?? `server answered ${r.status}`);
+      this.interfaces = body.interfaces;
+    } catch (err) {
+      this.interfacesError = `Could not load the network cards (${err instanceof Error ? err.message : err}). Restart Pulse on the server.`;
     }
     this.renderInterfaces();
   }
   renderInterfaces() {
     const parsed = this.address.value.trim() ? parseStreamUrl(this.address.value) : null;
     const chosen = parsed && !('error' in parsed) && parsed.mode === 'multicast' ? (parsed.iface ?? '') : '';
-    const options = [option('', 'Choose a network interface…')];
+    const options = [option('', this.interfacesError || 'Choose a network interface…')];
     for (const i of this.interfaces) options.push(option(i.address, `${i.name} · ${i.address}${i.internal ? ' (loopback)' : ''}`));
     if (chosen && !this.interfaces.some((i) => i.address === chosen)) options.push(option(chosen, `${chosen} (not found on this computer)`));
     clear(this.ifaceSel);

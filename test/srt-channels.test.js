@@ -35,37 +35,72 @@ describe('DailyLog', () => {
     now = new Date(2026, 9, 23, 0, 0, 1);
     log.write(1, 'Studio feed', 'ERROR', 'alert', 'CRITICAL black_video — Black video', true);
     expect(readdirSync(root).sort()).toEqual(['2026-10-22', '2026-10-23']);
-    expect(readFileSync(join(root, '2026-10-22', 'srt-1.log'), 'utf8')).toContain('idle → connected');
-    const next = readFileSync(join(root, '2026-10-23', 'srt-1.log'), 'utf8');
+    expect(readFileSync(join(root, '2026-10-22', 'Studio feed.log'), 'utf8')).toContain('idle → connected');
+    const next = readFileSync(join(root, '2026-10-23', 'Studio feed.log'), 'utf8');
     expect(next).toContain('[Studio feed]');
     expect(next).not.toContain('idle → connected');
-    expect(readFileSync(join(root, '2026-10-23', 'alerts.log'), 'utf8')).toContain('black_video');
-    expect(readdirSync(join(root, '2026-10-22'))).not.toContain('alerts.log');
+    expect(readFileSync(join(root, '2026-10-23', 'all-channels.log'), 'utf8')).toContain('black_video');
+    expect(readdirSync(join(root, '2026-10-22'))).not.toContain('all-channels.log');
   });
-  it('keeps every channel in all-channels.log and server lines out of channel files', () => {
+  it('puts the alerts of every channel and the server lines in all-channels.log, and everything else only in the channel file', () => {
     const root = tmp();
     const log = new DailyLog(root, () => new Date(2026, 0, 5, 8, 0, 0));
     log.write(0, '', 'INFO', 'server', 'ready');
     log.write(2, 'Backup', 'WARN', 'process', 'line one\nline two');
+    log.write(2, 'Backup', 'ERROR', 'alert', 'CRITICAL black_video', true);
+    log.write(3, 'News', 'ERROR', 'alert', 'WARNING audio_silence', true);
     const dir = join(root, '2026-01-05');
-    expect(readdirSync(dir).sort()).toEqual(['all-channels.log', 'srt-2.log']);
+    expect(readdirSync(dir).sort()).toEqual(['Backup.log', 'News.log', 'all-channels.log']);
     const all = readFileSync(join(dir, 'all-channels.log'), 'utf8').trim().split('\n');
-    expect(all).toHaveLength(2);
+    expect(all).toHaveLength(3);
     expect(all[0]).toContain('[server]');
     expect(all[1]).toContain('[Backup]');
-    expect(all[1]).toContain('line one ⏎ line two');
+    expect(all[2]).toContain('[News]');
+    expect(all.join('\n')).not.toContain('line one');
+    const backup = readFileSync(join(dir, 'Backup.log'), 'utf8');
+    expect(backup).toContain('line one ⏎ line two');
+    expect(backup).toContain('black_video');
   });
   it('formats the folder name as YYYY-MM-DD', () => {
     expect(dayFolder(new Date(2026, 8, 3))).toBe('2026-09-03');
   });
 });
-describe('log files follow the channel kind and id', () => {
-  it('writes udp-<id>.log for UDP channels and srt-<id>.log for SRT channels, including ids above nine', () => {
+describe('log files are named after the channel', () => {
+  it('uses the name from the app, and keeps appending to the same file when the channel is stopped and started again', () => {
     const root = tmp();
     const log = new DailyLog(root, () => new Date(2026, 0, 5, 8, 0, 0));
-    log.write(12, 'Late add', 'INFO', 'state', 'x');
-    log.write(13, 'Multicast', 'INFO', 'state', 'y', false, 'udp');
-    expect(readdirSync(join(root, '2026-01-05')).sort()).toEqual(['all-channels.log', 'srt-12.log', 'udp-13.log']);
+    log.write(12, 'Sports East', 'INFO', 'control', 'started');
+    log.write(12, 'Sports East', 'INFO', 'control', 'stopped');
+    log.write(12, 'Sports East', 'INFO', 'control', 'started');
+    expect(readdirSync(join(root, '2026-01-05'))).toEqual(['Sports East.log']);
+    expect(readFileSync(join(root, '2026-01-05', 'Sports East.log'), 'utf8').trim().split('\n')).toHaveLength(3);
+  });
+  it('keeps the same file after a restart of the monitor', () => {
+    const root = tmp();
+    const first = new DailyLog(root, () => new Date(2026, 0, 5, 8, 0, 0));
+    first.write(4, 'Multicast A', 'INFO', 'state', 'one', false, 'udp');
+    const second = new DailyLog(root, () => new Date(2026, 0, 5, 9, 0, 0));
+    second.reserve(4, 'Multicast A', 'udp');
+    second.write(4, 'Multicast A', 'INFO', 'state', 'two', false, 'udp');
+    expect(readdirSync(join(root, '2026-01-05'))).toEqual(['Multicast A.log']);
+    expect(readFileSync(join(root, '2026-01-05', 'Multicast A.log'), 'utf8')).toMatch(/one[\s\S]*two/);
+  });
+  it('starts a new file when the channel is renamed, and falls back to kind-id for an empty name', () => {
+    const root = tmp();
+    const log = new DailyLog(root, () => new Date(2026, 0, 5, 8, 0, 0));
+    log.write(1, 'Old name', 'INFO', 'control', 'a');
+    log.write(1, 'New name', 'INFO', 'control', 'b');
+    log.write(13, '', 'INFO', 'state', 'c', false, 'udp');
+    expect(readdirSync(join(root, '2026-01-05')).sort()).toEqual(['New name.log', 'Old name.log', 'udp-13.log']);
+  });
+  it('keeps two channels with the same name in separate files and makes unsafe names safe', () => {
+    const root = tmp();
+    const log = new DailyLog(root, () => new Date(2026, 0, 5, 8, 0, 0));
+    log.write(1, 'Studio', 'INFO', 'state', 'x');
+    log.write(2, 'studio', 'INFO', 'state', 'y');
+    log.write(3, 'A/B: "live"?', 'INFO', 'state', 'z');
+    log.write(4, 'CON', 'INFO', 'state', 'w');
+    expect(readdirSync(join(root, '2026-01-05')).sort()).toEqual(['A_B_ _live__.log', 'CON_.log', 'Studio.log', 'studio (2).log']);
   });
 });
 describe('channel list in the settings file', () => {

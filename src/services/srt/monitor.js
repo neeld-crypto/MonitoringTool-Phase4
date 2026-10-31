@@ -175,6 +175,7 @@ export class SrtMonitor {
           'notify',
           `${alert.rule} → ${summary}`,
           true,
+          this.channels.find((c) => c.id === alert.channelId)?.kind,
         );
       },
     );
@@ -185,6 +186,8 @@ export class SrtMonitor {
       persist: () => this.save(),
     };
     for (const c of stored.channels) this.channels.push(this.makeChannel(c));
+    // Log file names follow the channel names: claim them in id order so a restart gives every channel the same file again.
+    for (const c of [...this.channels].sort((x, y) => x.id - y.id)) this.log.reserve(c.id, c.name, c.kind);
     this.nextId = Math.max(0, ...this.channels.map((c) => c.id)) + 1;
     // A first run gets one empty channel so the page has something to configure; more are added from the panel.
     if (!this.channels.length) this.addChannel('srt', undefined, false);

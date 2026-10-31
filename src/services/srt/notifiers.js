@@ -77,7 +77,7 @@ export async function sendEmail(cfg, a) {
 }
 /**
  * Only these main faults are sent to Slack / Teams / email. Everything else (link loss, retransmissions, PAT/PMT, bitrate
- * dips, ...) is still shown in the app and written to the channel log, all-channels.log and alerts.log.
+ * dips, ...) is still shown in the app and written to the channel log (named after the channel) and all-channels.log.
  */
 export const NOTIFY_RULES = new Set(['no_connection', 'no_signal', 'video_black', 'audio_silence', 'ts_sync']);
 /** Applies severity filtering, flap cooldown and recovery rules, then sends to every enabled channel. */

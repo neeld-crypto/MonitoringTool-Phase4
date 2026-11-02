@@ -1,7 +1,9 @@
 import { ruleLabel } from '../../srt/rule-labels';
 import { kindLabel } from '../../srt/types';
 import { h } from '../dom';
-export const WALL_SIZES = ['auto', '2x2', '3x3', '4x4', '5x5', '6x6', '8x8'];
+export const WALL_SIZES = ['2x2', '3x3', '4x4', '5x5', '6x6', '8x8'];
+/** The grid used until the user picks one. */
+export const DEFAULT_SIZE = '4x4';
 const gridCols = (size) => (size === 'auto' ? 0 : Number(size.split('x')[0]));
 /** Minimum tile width in pixels when the grid is automatic. */
 const AUTO_MIN_PX = 250;
@@ -118,6 +120,7 @@ export class SrtWall {
   timer = null;
   lastRender = 0;
   io = null;
+  lastFit = '';
   constructor(client, hooks) {
     this.client = client;
     this.hooks = hooks;
@@ -133,19 +136,32 @@ export class SrtWall {
         { rootMargin: '120px' },
       );
     }
-    this.setSize('auto');
+    document.addEventListener('fullscreenchange', () => this.fit());
+    if (typeof ResizeObserver !== 'undefined') new ResizeObserver(() => this.fit()).observe(this.el);
+    this.setSize(DEFAULT_SIZE);
   }
   setSize(size) {
     const n = gridCols(size);
+    this.cols = n;
     this.el.style.setProperty('--mv-min', `${AUTO_MIN_PX}px`);
     if (n) this.el.style.setProperty('--mv-n', String(n));
     this.el.dataset.grid = n ? 'fixed' : 'auto';
     // Drives the CSS that drops detail from small tiles.
     this.el.dataset.size = n >= 5 ? 's' : n === 2 ? 'xl' : 'm';
+    this.lastFit = '';
+    this.fit();
   }
   setFilter(filter) {
     this.filter = filter;
     this.render();
+  }
+  cols = 0;
+  get fullscreen() {
+    return document.fullscreenElement === this.el;
+  }
+  async toggleFullscreen() {
+    if (this.fullscreen) await document.exitFullscreen();
+    else await this.el.requestFullscreen?.();
   }
   /** Coalesces the bursts of updates (every channel reports every second) into one pass. */
   schedule() {
@@ -187,6 +203,7 @@ export class SrtWall {
     });
     this.el.dataset.hud = `${live} playing · ${shown} shown · ${alerts} alert${alerts === 1 ? '' : 's'}`;
     this.hooks.onSummary({ total: channels.length, live, alerts, shown });
+    this.fit();
   }
   makeTile(id) {
     const img = h('img', { class: 'mv-img', alt: '', decoding: 'async', draggable: false });
@@ -245,6 +262,7 @@ export class SrtWall {
       this.filter === c.kind ||
       (this.filter === 'problems' && (hl === 'crit' || hl === 'warn' || active > 0));
     t.el.hidden = !pass;
+    t.el.dataset.running = running ? '1' : '';
     if (!pass) return false;
     const selected = c.id === this.client.selectedId;
     if (t.shown.selected !== selected) {
@@ -348,5 +366,57 @@ export class SrtWall {
     if (cfg.mode === 'listener') return `listening :${cfg.port}`;
     if (cfg.mode === 'multicast') return `${cfg.host}:${cfg.port}`;
     return `${cfg.host}:${cfg.port}`;
+  }
+  /**
+   * Fullscreen has no scrolling and no empty space, and shows the running channels only (all of them when none runs).
+   * The chosen grid (or, on auto, the column count whose cells are closest to 16:9 for this screen) decides the number of rows; the channels are shared out evenly over those rows,
+   * and the tiles of a row with fewer channels are made wider so every row is full. Outside fullscreen the CSS grid decides.
+   */
+  fit() {
+    const tiles = [...this.el.children].filter((e) => e instanceof HTMLElement && e.classList.contains('mv-tile'));
+    if (!this.fullscreen) {
+      if (this.lastFit) {
+        this.el.style.removeProperty('--mv-cols');
+        this.el.style.removeProperty('--mv-rows');
+        for (const t of tiles) {
+          t.style.removeProperty('grid-column');
+          t.classList.remove('fs-off');
+        }
+        this.lastFit = '';
+      }
+      return;
+    }
+    // Only the channels being monitored are shown, so two running streams fill the screen. With none running, all show (as stopped).
+    const passing = tiles.filter((e) => !e.hidden);
+    const running = passing.filter((e) => e.dataset.running === '1');
+    const shown = running.length ? running : passing;
+    for (const e of passing) e.classList.toggle('fs-off', !shown.includes(e));
+    const n = shown.length || 1;
+    const { clientWidth: w, clientHeight: hgt } = this.el;
+    let cols = this.cols;
+    if (!cols) {
+      let bestDiff = Infinity;
+      for (let c = 1; c <= n; c++) {
+        const diff = Math.abs(Math.log(w / c / (hgt / Math.ceil(n / c)) / (16 / 9)));
+        if (diff < bestDiff) {
+          bestDiff = diff;
+          cols = c;
+        }
+      }
+    }
+    cols = Math.max(1, Math.min(cols || 1, n));
+    const rows = Math.ceil(n / cols);
+    const key = `${w}x${hgt}/${cols}/${shown.map((e) => e.dataset.id ?? '').join(',')}`;
+    if (key === this.lastFit) return;
+    this.lastFit = key;
+    const base = Math.floor(n / rows);
+    const extra = n % rows;
+    const counts = Array.from({ length: rows }, (_, i) => base + (i < extra ? 1 : 0));
+    const gcd = (x, y) => (y ? gcd(y, x % y) : x);
+    const span = counts.reduce((acc, k) => (acc * k) / gcd(acc, k), 1);
+    this.el.style.setProperty('--mv-cols', String(span));
+    this.el.style.setProperty('--mv-rows', String(rows));
+    let at = 0;
+    for (const k of counts) for (let i = 0; i < k; i++) shown[at++].style.gridColumn = `span ${span / k}`;
   }
 }

@@ -1,7 +1,7 @@
 import { MAX_NAME_LENGTH, kindLabel } from '../../srt/types';
 import { formatStreamUrl, parseStreamLine, parseStreamList, parseStreamUrl } from '../../srt/url';
 import { badge, clear, h } from '../dom';
-import { SrtWall, WALL_SIZES } from './wall';
+import { DEFAULT_SIZE, SrtWall, WALL_SIZES } from './wall';
 const KIND_WITH_ARTICLE = { srt: 'an SRT', udp: 'a UDP', hls: 'an HLS' };
 const KIND_ADDRESS = { srt: 'an srt://', udp: 'a udp://@group:port', hls: 'an https://….m3u8' };
 const WALL_PREFS_KEY = 'sap.srt.wall.v1';
@@ -16,11 +16,11 @@ function loadWallPrefs() {
   try {
     const p = JSON.parse(localStorage.getItem(WALL_PREFS_KEY) ?? '{}');
     return {
-      size: p.size && WALL_SIZES.includes(p.size) ? p.size : 'auto',
+      size: p.size && WALL_SIZES.includes(p.size) ? p.size : DEFAULT_SIZE,
       filter: p.filter && ['all', 'running', 'problems', 'stopped', 'srt', 'udp', 'hls'].includes(p.filter) ? p.filter : 'all',
     };
   } catch {
-    return { size: 'auto', filter: 'all' };
+    return { size: DEFAULT_SIZE, filter: 'all' };
   }
 }
 /**
@@ -63,7 +63,6 @@ export class SrtPanel {
   loadInfo = h('div', { class: 'srt-load muted small' });
   summary = h('span', { class: 'mv-summary muted small' });
   sizeSel = h('select', { 'aria-label': 'Tile size' }, [
-    option('auto', 'Auto grid'),
     option('2x2', '2 × 2 grid'),
     option('3x3', '3 × 3 grid'),
     option('4x4', '4 × 4 grid'),

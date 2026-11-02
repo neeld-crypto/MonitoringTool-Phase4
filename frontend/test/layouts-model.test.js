@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { collides, fillEmpty, freeSpot, fromPreset, GRID, PRESETS } from '../src/layouts/model';
+import { collides, fillEmpty, freeSpot, fromPreset, GRID, PRESETS, resizeInto } from '../src/layouts/model';
 
 describe('layout presets', () => {
   it('stay inside the screen and never overlap', () => {
@@ -43,5 +43,26 @@ describe('placing cells', () => {
     const previous = [{ channel: 5 }, { channel: null }];
     const cells = fromPreset(PRESETS.find((p) => p.id === '2x2'), previous, [5, 6, 7]);
     expect(cells.map((c) => c.channel)).toEqual([5, 6, 7, null]);
+  });
+});
+
+describe('resizing a cell over its neighbours', () => {
+  const grid2x2 = () => PRESETS.find((p) => p.id === '2x2').cells.map((c) => ({ ...c, channel: null }));
+
+  it('trims the cells it grows over', () => {
+    const out = resizeInto(grid2x2(), 0, { x: 0, y: 0, w: 18, h: 12 });
+    expect(out[0]).toMatchObject({ x: 0, y: 0, w: 18, h: 12 });
+    expect(out[1]).toMatchObject({ x: 18, y: 0, w: 6, h: 12 });
+    expect(out[2]).toMatchObject({ x: 0, y: 12, w: 12, h: 12 });
+  });
+
+  it('refuses to squash a neighbour below the minimum size', () => {
+    expect(resizeInto(grid2x2(), 0, { x: 0, y: 0, w: 24, h: 12 })).toBeNull();
+  });
+
+  it('leaves the original list alone, so dragging back restores the neighbours', () => {
+    const cells = grid2x2();
+    resizeInto(cells, 0, { x: 0, y: 0, w: 18, h: 12 });
+    expect(cells[1]).toMatchObject({ x: 12, w: 12 });
   });
 });

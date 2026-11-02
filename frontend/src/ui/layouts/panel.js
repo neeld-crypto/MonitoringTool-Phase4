@@ -1,10 +1,11 @@
-import { ASPECTS, collides, fillEmpty, freeSpot, fromPreset, GRID, MIN_CELL, PRESETS } from '../../layouts/model';
+import { ASPECTS, collides, fillEmpty, freeSpot, fromPreset, GRID, MIN_CELL, PRESETS, resizeInto } from '../../layouts/model';
 import { loadLayouts, saveLayouts } from '../../layouts/client';
 import { clear, h } from '../dom';
 import { LayoutWall, place } from './view';
 
 const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, n));
 const aspectLabel = (id) => ASPECTS.find((a) => a.id === id)?.label ?? id;
+const RESIZE_DIRS = ['n', 's', 'e', 'w', 'ne', 'nw', 'se', 'sw'];
 const option = (value, text) => h('option', { value }, text);
 
 /**
@@ -240,7 +241,7 @@ export class LayoutsPanel {
       h(
         'p',
         { class: 'muted small' },
-        'Pick a preset on the left, or drag a cell to move it and drag its bottom-right corner to resize it. Choose the channel inside each cell.',
+        'Pick a preset on the left, or drag a cell to move it. Drag any edge or corner of a cell to make it bigger or smaller: the cells it grows over shrink to make room. Choose the channel inside each cell.',
       ),
       h('div', { class: 'lay-editor' }, presets, this.canvas),
     );
@@ -287,33 +288,55 @@ export class LayoutsPanel {
       this.draft.cells.splice(i, 1);
       this.renderCells();
     });
-    const handle = h('span', { class: 'lay-handle', title: 'Drag to resize' });
-    const el = h('div', { class: 'lay-cell' }, h('b', { class: 'lay-no' }, String(i + 1)), del, sel, handle);
+    const handles = RESIZE_DIRS.map((dir) => h('span', { class: `lay-h lay-h-${dir}`, dataset: { dir }, title: 'Drag to resize' }));
+    const el = h('div', { class: 'lay-cell' }, h('b', { class: 'lay-no' }, String(i + 1)), del, sel, handles);
     place(el, cell);
-    el.addEventListener('pointerdown', (e) => this.drag(e, el, cell, i, e.target === handle ? 'resize' : 'move'));
+    el.addEventListener('pointerdown', (e) => this.drag(e, i, e.target.dataset?.dir || 'move'));
     return el;
   }
-  /** Moves or resizes a cell with the mouse (or a finger), snapping to the grid and never onto another cell. */
-  drag(e, el, cell, index, mode) {
+  /**
+   * Moves a cell (it stops at other cells) or resizes it from any edge or corner (`n`, `se`, ...), snapping to the grid.
+   * Growing a cell over its neighbours trims them, so any cell can be pulled big; dragging back gives them their size again.
+   */
+  drag(e, index, mode) {
     if (e.button !== undefined && e.button !== 0) return;
     e.preventDefault();
+    const el = this.cellEls[index];
     const rect = this.canvas.getBoundingClientRect();
     const unitX = rect.width / GRID;
     const unitY = rect.height / GRID;
-    const start = { x: e.clientX, y: e.clientY, cell: { ...cell } };
+    const from = this.draft.cells.map((c) => ({ ...c }));
+    const s = from[index];
+    const origin = { x: e.clientX, y: e.clientY };
     el.setPointerCapture(e.pointerId);
     el.classList.add('dragging');
     const move = (ev) => {
-      const dx = Math.round((ev.clientX - start.x) / unitX);
-      const dy = Math.round((ev.clientY - start.y) / unitY);
-      const s = start.cell;
-      const next =
-        mode === 'move'
-          ? { ...s, x: clamp(s.x + dx, 0, GRID - s.w), y: clamp(s.y + dy, 0, GRID - s.h) }
-          : { ...s, w: clamp(s.w + dx, MIN_CELL, GRID - s.x), h: clamp(s.h + dy, MIN_CELL, GRID - s.y) };
-      if (collides(this.draft.cells, next, index)) return;
-      Object.assign(cell, next);
-      place(el, cell);
+      const dx = Math.round((ev.clientX - origin.x) / unitX);
+      const dy = Math.round((ev.clientY - origin.y) / unitY);
+      let next;
+      if (mode === 'move') {
+        next = { ...s, x: clamp(s.x + dx, 0, GRID - s.w), y: clamp(s.y + dy, 0, GRID - s.h) };
+        if (collides(from, next, index)) return;
+      } else {
+        next = { x: s.x, y: s.y, w: s.w, h: s.h };
+        if (mode.includes('e')) next.w = clamp(s.w + dx, MIN_CELL, GRID - s.x);
+        if (mode.includes('s')) next.h = clamp(s.h + dy, MIN_CELL, GRID - s.y);
+        if (mode.includes('w')) {
+          next.x = clamp(s.x + dx, 0, s.x + s.w - MIN_CELL);
+          next.w = s.x + s.w - next.x;
+        }
+        if (mode.includes('n')) {
+          next.y = clamp(s.y + dy, 0, s.y + s.h - MIN_CELL);
+          next.h = s.y + s.h - next.y;
+        }
+      }
+      const rects = mode === 'move' ? from.map((c, i) => (i === index ? { ...c, ...next } : c)) : resizeInto(from, index, next);
+      if (!rects) return;
+      rects.forEach((r, i) => {
+        const cell = this.draft.cells[i];
+        Object.assign(cell, { x: r.x, y: r.y, w: r.w, h: r.h });
+        place(this.cellEls[i], cell);
+      });
     };
     const done = () => {
       el.classList.remove('dragging');

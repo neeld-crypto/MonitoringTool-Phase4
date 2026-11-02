@@ -2763,14 +2763,71 @@ button.link {
   max-width: 100%;
   font-size: 12px;
 }
-.lay-handle {
+.lay-h {
   position: absolute;
-  right: 0;
-  bottom: 0;
-  width: 16px;
-  height: 16px;
+  z-index: 1;
+}
+.lay-h-n,
+.lay-h-s {
+  left: 10px;
+  right: 10px;
+  height: 8px;
+  cursor: ns-resize;
+}
+.lay-h-e,
+.lay-h-w {
+  top: 10px;
+  bottom: 10px;
+  width: 8px;
+  cursor: ew-resize;
+}
+.lay-h-n {
+  top: -2px;
+}
+.lay-h-s {
+  bottom: -2px;
+}
+.lay-h-e {
+  right: -2px;
+}
+.lay-h-w {
+  left: -2px;
+}
+.lay-h-ne,
+.lay-h-nw,
+.lay-h-se,
+.lay-h-sw {
+  width: 14px;
+  height: 14px;
+  background: var(--accent);
+  border: 2px solid #fff;
+  border-radius: 3px;
+}
+.lay-h-ne {
+  top: -2px;
+  right: -2px;
+  cursor: nesw-resize;
+}
+.lay-h-nw {
+  top: -2px;
+  left: -2px;
   cursor: nwse-resize;
-  background: linear-gradient(135deg, transparent 50%, var(--accent) 50%);
+}
+.lay-h-se {
+  bottom: -2px;
+  right: -2px;
+  cursor: nwse-resize;
+}
+.lay-h-sw {
+  bottom: -2px;
+  left: -2px;
+  cursor: nesw-resize;
+}
+.lay-cell:hover .lay-h-n,
+.lay-cell:hover .lay-h-s,
+.lay-cell:hover .lay-h-e,
+.lay-cell:hover .lay-h-w {
+  background: rgba(255, 255, 255, 0.35);
 }
 
 /* Live view: the stage keeps the layout's shape; fullscreen scales it to the screen with black bars if needed. */

@@ -82,3 +82,26 @@ export function fillEmpty(cells, channelIds) {
   const spare = channelIds.filter((id) => !used.has(id));
   return cells.map((c) => (c.channel === null && spare.length ? { ...c, channel: spare.shift() } : c));
 }
+
+/**
+ * Makes the cell at `index` the rectangle `next` and trims every cell it now covers (on the side that keeps the most of it), so one
+ * channel can be pulled bigger without moving the others by hand. Returns the new list of rectangles, or null when a neighbour
+ * would become smaller than MIN_CELL (then the cell cannot grow that far).
+ */
+export function resizeInto(cells, index, next) {
+  const out = cells.map((c, i) => (i === index ? { ...c, ...next } : { ...c }));
+  for (let i = 0; i < out.length; i++) {
+    const o = out[i];
+    if (i === index || !overlaps(o, next)) continue;
+    const keep = [
+      { x: next.x + next.w, y: o.y, w: o.x + o.w - (next.x + next.w), h: o.h },
+      { x: o.x, y: o.y, w: next.x - o.x, h: o.h },
+      { x: o.x, y: next.y + next.h, w: o.w, h: o.y + o.h - (next.y + next.h) },
+      { x: o.x, y: o.y, w: o.w, h: next.y - o.y },
+    ].filter((c) => c.w >= MIN_CELL && c.h >= MIN_CELL);
+    if (!keep.length) return null;
+    keep.sort((a, b) => b.w * b.h - a.w * a.h);
+    Object.assign(o, keep[0]);
+  }
+  return out;
+}

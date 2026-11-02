@@ -10,6 +10,9 @@ After=network-online.target
 User=CHANGE_ME
 WorkingDirectory=/home/CHANGE_ME/playprobe
 Environment=HOST=0.0.0.0
+# The sign-in of the page. Change both; admin / admin is only the fallback.
+Environment=PULSE_USER=admin
+Environment=PULSE_PASSWORD=CHANGE_ME
 ExecStart=/home/CHANGE_ME/playprobe/start.sh
 Restart=always
 RestartSec=3

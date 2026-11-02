@@ -10,6 +10,8 @@ import { fileURLToPath } from 'node:url';
  *   PORT              default 4173
  *   HOST              default 127.0.0.1 (the APIs start processes and have no login: keep it local or on a trusted network)
  *   PLAYPROBE_HOME    folder holding dist/, tools/ and the data folders (the Linux bundle's start.sh sets it)
+ *   PULSE_USER, PULSE_PASSWORD   the sign-in (default admin / admin: change it); PULSE_AUTH=off turns the sign-in off
+ *   PULSE_SESSION_HOURS          how long a sign-in lasts (default 12)
  *   FFMPEG_PATH, SRT_LIVE_TRANSMIT_PATH, SRT_WEBHOOK_URL, SRT_WEBHOOK_KIND
  */
 const embedded = sea.isSea();
@@ -66,4 +68,11 @@ export const config = {
   layoutsPath: join(appDir, '.playprobe', 'layouts.json'),
   logDir: join(appDir, 'logs'),
   noBrowser: process.env.PLAYPROBE_NO_BROWSER === '1',
+  auth: {
+    enabled: (process.env.PULSE_AUTH ?? '').toLowerCase() !== 'off',
+    user: process.env.PULSE_USER || 'admin',
+    password: process.env.PULSE_PASSWORD || 'admin',
+    defaultPassword: !process.env.PULSE_PASSWORD,
+    sessionMs: (Number(process.env.PULSE_SESSION_HOURS) > 0 ? Number(process.env.PULSE_SESSION_HOURS) : 12) * 3600_000,
+  },
 };

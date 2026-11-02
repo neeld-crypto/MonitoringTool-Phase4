@@ -18,6 +18,7 @@ async function request(method, path, body) {
       'Cannot reach the Pulse server. Make sure it is still running (npm run dev, or PlayProbe.exe) and that this page was opened from it.',
     );
   }
+  if (res.status === 401) location.assign('/login');
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data.error ?? `${res.status} ${res.statusText}`);
   return data;

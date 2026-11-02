@@ -9,7 +9,7 @@ server.js            entry: starts the server
 src/
   index.js           start(): listen, shutdown, desktop-app behaviour
   app.js             Express app: mounts the routers and serves the frontend
-  apps/              one folder per API area (routes only): srt, proxy, system, layouts
+  apps/              one folder per API area (routes only): srt, proxy, system, layouts, auth
   config/            environment and paths
   constants/         MIME types, limits, SRT / alert defaults
   libraries/         wrappers around external tools

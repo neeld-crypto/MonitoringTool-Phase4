@@ -1,19 +1,24 @@
 import express from 'express';
+import { createAuthRouter, requireLogin } from './apps/auth/auth.routes.js';
 import { layoutsRouter } from './apps/layouts/layouts.routes.js';
 import { corsProxyHandler } from './apps/proxy/proxy.routes.js';
 import { srtRouter } from './apps/srt/srt.routes.js';
 import { createSystemRouter } from './apps/system/system.routes.js';
 import { config } from './config/index.js';
+import { createAuth } from './services/auth.js';
 import { staticMiddleware } from './utilities/static.js';
 
 /**
- * The Express application: the monitoring API (/__srt), the CORS proxy (/__proxy), the desktop
+ * The Express application, behind a user name and password: the monitoring API (/__srt), the CORS proxy (/__proxy), the desktop
  * endpoints (/__app) and the built React frontend for everything else.
  */
-export function createApp({ onQuit }) {
+export function createApp({ onQuit, auth = createAuth(config.auth) }) {
   const app = express();
   app.disable('x-powered-by');
 
+  // Everything below needs a signed-in session, except the sign-in page itself.
+  app.use(createAuthRouter(auth));
+  app.use(requireLogin(auth));
   app.use('/__app', createSystemRouter({ onQuit }));
   app.use('/__proxy', corsProxyHandler);
   app.use('/__srt', srtRouter);

@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { useTheme } from '../hooks/useTheme';
 import { icons } from '../ui/icons';
 import Icon from './Icon';
@@ -5,6 +6,17 @@ import Icon from './Icon';
 /** Brand, stream URL box, theme and load-settings buttons. */
 export default function Topbar({ url, onUrl, history, onLoad, settingsOpen, onToggleSettings, onThemeChange }) {
   const theme = useTheme(onThemeChange);
+  const [user, setUser] = useState(null);
+  useEffect(() => {
+    fetch('/__auth/status', { cache: 'no-store' })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((s) => setUser(s?.enabled ? s.user : null))
+      .catch(() => undefined);
+  }, []);
+  const signOut = async () => {
+    await fetch('/__auth/logout', { method: 'POST' }).catch(() => undefined);
+    location.assign('/login');
+  };
   return (
     <header className="topbar">
       <div className="brand">
@@ -42,6 +54,11 @@ export default function Topbar({ url, onUrl, history, onLoad, settingsOpen, onTo
           <Icon html={theme.icon} />
           <span>{theme.label}</span>
         </button>
+        {user && (
+          <button type="button" id="signout-btn" className="theme-btn signout" title={`Signed in as ${user}`} onClick={signOut}>
+            <span>Sign out</span>
+          </button>
+        )}
         <button
           type="button"
           id="settings-btn"

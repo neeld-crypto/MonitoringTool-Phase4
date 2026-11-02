@@ -1,8 +1,19 @@
 # Frontend API
 
-The Express backend (`server.js`, port 4173) serves the built frontend and these endpoints. All of them are for local / trusted-network use and have no login. Requests with a foreign `Origin` are refused (403). Errors are `{ "error": "message" }` with status 400, 403 or 404.
+The Express backend (`server.js`, port 4173) serves the built frontend and these endpoints. All of them are for local / trusted-network use and need a signed-in session (cookie `pulse_session`, see Sign-in below); without one pages redirect to `/login` and the APIs answer 401. Requests with a foreign `Origin` are refused (403). Errors are `{ "error": "message" }` with status 400, 403 or 404.
 
-In development the Vite server (port 5173) proxies `/__srt`, `/__proxy`, `/__app` and `/__layouts` to the backend (`BACKEND_URL`, default `http://127.0.0.1:4173`).
+In development the Vite server (port 5173) proxies `/__srt`, `/__proxy`, `/__app`, `/__layouts`, `/__auth` and `/login` to the backend (`BACKEND_URL`, default `http://127.0.0.1:4173`).
+
+## Sign-in (`/login`, `/__auth`)
+
+One shared user name and password, from `PULSE_USER` / `PULSE_PASSWORD` (default `admin` / `admin`). `PULSE_AUTH=off` disables it; `PULSE_SESSION_HOURS` sets how long a sign-in lasts (default 12). Sessions are kept in memory, so a restart signs everyone out. Five wrong passwords lock that address for a minute (429). The cookie is `HttpOnly` and `SameSite=Strict`. `POST /__app/quit` from the server's own machine needs no sign-in (the uninstaller uses it).
+
+| Method | Path | Body | Result |
+| --- | --- | --- | --- |
+| GET | `/login` | | the sign-in page (query `next`: the page to open afterwards) |
+| POST | `/__auth/login` | form `user`, `password`, `next` | sets the session cookie and redirects (303); 401 or 429 shows the page again with the reason |
+| POST | `/__auth/logout` | | ends the session: `{ ok: true }` |
+| GET | `/__auth/status` | | `{ enabled, user }` (401 when not signed in) |
 
 ## System (`/__app`)
 

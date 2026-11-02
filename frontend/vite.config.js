@@ -15,6 +15,8 @@ export default defineConfig({
       '/__proxy': { target: backend, changeOrigin: false },
       '/__app': { target: backend, changeOrigin: false },
       '/__layouts': { target: backend, changeOrigin: false },
+      '/__auth': { target: backend, changeOrigin: false },
+      '/login': { target: backend, changeOrigin: false },
     },
   },
   preview: { port: 4174 },

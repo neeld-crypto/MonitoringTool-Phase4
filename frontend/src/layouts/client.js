@@ -6,6 +6,7 @@ async function request(method, body) {
     body: body ? JSON.stringify(body) : undefined,
     cache: 'no-store',
   });
+  if (res.status === 401) location.assign('/login');
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data.error ?? `server answered ${res.status}`);
   return data.layouts;

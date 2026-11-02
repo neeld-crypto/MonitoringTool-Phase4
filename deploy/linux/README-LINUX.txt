@@ -23,8 +23,8 @@ Pulse on Ubuntu
    To open it by the server IP instead (trusted network only):  PULSE_USER=you PULSE_PASSWORD=secret HOST=0.0.0.0 ./start.sh  then  http://SERVER_IP:4173/
 
    Sign-in: the page asks for a user name and password. Choose them with PULSE_USER and PULSE_PASSWORD
-   (as a service: two Environment= lines in playprobe.service). If you set nothing, it is  admin / admin
-   and the server prints a warning: change it before opening the page to anyone else. Signing in lasts
+   (as a service: two Environment= lines in playprobe.service). If you set nothing, it is  skandha / skandha@123
+   (built in, the same on every machine). Signing in lasts
    12 hours (PULSE_SESSION_HOURS), five wrong passwords lock that address for a minute, and restarting
    Pulse signs everyone out. The password travels unencrypted over http://, so keep to a trusted network
    or the SSH tunnel above (or put an https reverse proxy in front).

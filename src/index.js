@@ -37,7 +37,6 @@ export function start() {
   const server = app.listen(port, host, () => {
     console.log(`Pulse is running at ${url}`);
     if (!config.auth.enabled) console.log('Sign-in is OFF (PULSE_AUTH=off): anyone who can reach this address can use Pulse.');
-    else if (config.auth.defaultPassword) console.warn(`Sign-in is ${config.auth.user} / admin. Set PULSE_USER and PULSE_PASSWORD to choose your own.`);
     console.log(`ffmpeg: ${process.env.FFMPEG_PATH ?? 'from PATH'}`);
     console.log('Press Ctrl+C to stop it and every SRT / UDP channel.');
     if (embedded && !config.noBrowser) openWindow(url);

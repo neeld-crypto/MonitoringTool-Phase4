@@ -32,7 +32,7 @@ npm run build:linux   # release/playprobe-linux.tar.gz for Ubuntu (see deploy/li
 npm run build:exe     # Windows installer and portable build
 ```
 
-On Ubuntu, `HOST=0.0.0.0 ./start.sh` serves the page on the server's IP (the page asks for the user name and password in PULSE_USER / PULSE_PASSWORD, default admin / admin; it is plain HTTP, so use a trusted network).
+On Ubuntu, `HOST=0.0.0.0 ./start.sh` serves the page on the server's IP (the page asks for the user name and password in PULSE_USER / PULSE_PASSWORD, default skandha / skandha@123; it is plain HTTP, so use a trusted network).
 
 ## Branches
 

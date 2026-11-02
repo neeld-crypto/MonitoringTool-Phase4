@@ -11,8 +11,9 @@ Pulse on Ubuntu
 
 3. Run:
      ./start.sh
-   Keep the PuTTY window open, or use  nohup ./start.sh > playprobe.out 2>&1 &  to leave it running,
-   or the systemd unit in playprobe.service.
+   To keep it running after the terminal closes, restart it if it crashes and start it at boot, use the
+   systemd unit playprobe.service (edit User= and the paths, then see the three commands at its top).
+   It opens the page on the server IP (HOST=0.0.0.0); logs of the service: journalctl -u playprobe -f
 
 4. Open the page from your PC with an SSH tunnel (nothing is exposed to the network, and the
    page has no login, so do NOT bind it to a public address):
@@ -32,6 +33,11 @@ Pulse on Ubuntu
      ./load-report.sh 5
    (the SRT panel in the web page also shows machine / server / ffmpeg load live), or  htop .
 
-Files: logs/<date>/ (daily logs) and .playprobe/ (settings, may contain the Slack webhook) are created in this folder.
+Files, all created in this folder:
+  logs/<date>/all-channels.log   the alerts of every channel (and server messages)
+  logs/<date>/<channel name>.log everything about one channel, named after it, continued when it is stopped and started
+  .playprobe/                    settings, layouts (may contain the Slack webhook)
+Old log days are not deleted: remove logs/<old date>/ folders now and then.
 Set the Slack webhook once in the Alerts tab, or start with  SRT_WEBHOOK_URL=... ./start.sh
+(as a service: add a line  Environment=SRT_WEBHOOK_URL=...  to playprobe.service). The server needs internet access to Slack.
 Environment: PORT (default 4173), HOST (default 127.0.0.1).

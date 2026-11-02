@@ -1,16 +1,17 @@
-# Optional: run PlayProbe in the background and start it at boot.
+# Run Pulse in the background, start it at boot and bring it back if it stops or crashes.
 #   1. edit User= and the two paths below
 #   2. sudo cp playprobe.service /etc/systemd/system/ && sudo systemctl daemon-reload
 #   3. sudo systemctl enable --now playprobe        (logs: journalctl -u playprobe -f)
 [Unit]
-Description=PlayProbe SRT / HLS monitor
+Description=Pulse stream monitor
 After=network-online.target
 
 [Service]
 User=CHANGE_ME
 WorkingDirectory=/home/CHANGE_ME/playprobe
+Environment=HOST=0.0.0.0
 ExecStart=/home/CHANGE_ME/playprobe/start.sh
-Restart=on-failure
+Restart=always
 RestartSec=3
 
 [Install]

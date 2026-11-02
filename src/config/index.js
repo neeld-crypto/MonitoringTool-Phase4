@@ -1,4 +1,4 @@
-import { existsSync } from 'node:fs';
+import { existsSync, readdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import sea from 'node:sea';
@@ -27,6 +27,25 @@ const dist = !process.env.PLAYPROBE_HOME && existsSync(join(appDir, 'frontend', 
 const exe = process.platform === 'win32' ? '.exe' : '';
 const tools = join(appDir, 'tools');
 if (!process.env.FFMPEG_PATH && existsSync(join(tools, `ffmpeg${exe}`))) process.env.FFMPEG_PATH = join(tools, `ffmpeg${exe}`);
+// winget puts ffmpeg under the user's profile and on PATH only for terminals opened afterwards: look there if PATH has none.
+if (!process.env.FFMPEG_PATH && process.platform === 'win32' && process.env.LOCALAPPDATA) {
+  const onPath = (process.env.PATH ?? '').split(';').some((d) => d && existsSync(join(d, 'ffmpeg.exe')));
+  if (!onPath) {
+    const winget = join(process.env.LOCALAPPDATA, 'Microsoft', 'WinGet');
+    const candidates = [join(winget, 'Links', 'ffmpeg.exe')];
+    try {
+      for (const pkg of readdirSync(join(winget, 'Packages'))) {
+        if (!/ffmpeg/i.test(pkg)) continue;
+        candidates.push(join(winget, 'Packages', pkg, 'bin', 'ffmpeg.exe'));
+        for (const build of readdirSync(join(winget, 'Packages', pkg))) candidates.push(join(winget, 'Packages', pkg, build, 'bin', 'ffmpeg.exe'));
+      }
+    } catch {
+      /* no winget packages */
+    }
+    const found = candidates.find((c) => existsSync(c));
+    if (found) process.env.FFMPEG_PATH = found;
+  }
+}
 if (!process.env.SRT_LIVE_TRANSMIT_PATH && existsSync(join(tools, `srt-live-transmit${exe}`))) {
   process.env.SRT_LIVE_TRANSMIT_PATH = join(tools, `srt-live-transmit${exe}`);
 }

@@ -186,6 +186,7 @@ export class SrtPanel {
         this.stopAllBtn,
         this.sizeSel,
         this.filterSel,
+        h('button', { type: 'button', onclick: () => void this.wall.toggleFullscreen() }, 'Fullscreen wall'),
         this.quitBtn,
         this.summary,
       ),
@@ -377,6 +378,8 @@ export class SrtPanel {
     this.toggleAddMenu(false);
   }
   pick(id) {
+    // Fullscreen would cover the player and the analysis tabs the click is meant to open.
+    if (document.fullscreenElement) void document.exitFullscreen();
     this.client.select(id);
     this.addMode = 'none';
     this.setAddMode('manual');

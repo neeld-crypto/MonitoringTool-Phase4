@@ -2498,6 +2498,7 @@ fieldset.drm-box[hidden] {
 
 .tiles-col:has(#srt-panel:not([hidden])) .tiles-idle,
 .tiles-col:has(#layout-panel:not([hidden])) .tiles-idle,
+.tiles-col:has(#layout-panel:not([hidden])) .tiles-idle,
 .tiles-col:has(#tiles-empty:not([hidden])) .tiles-idle {
   display: none;
 }
@@ -2786,4 +2787,225 @@ button.link {
   .lay-preset {
     flex: 0 0 110px;
   }
+}
+
+/* ------------------------------------------------------------------ Layouts */
+
+.lay-title {
+  margin: 0 0 4px;
+}
+.lay-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.lay-gap {
+  flex: 1;
+}
+.lay-name {
+  font-size: 1.05em;
+}
+.lay-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.lay-table th,
+.lay-table td {
+  padding: 6px 10px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+.lay-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: flex-end;
+}
+button.link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent-2, var(--accent));
+  font: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.lay-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.lay-error {
+  color: #ef4444;
+}
+.lay-error:empty {
+  display: none;
+}
+
+/* Editor: presets on the left, the screen on the right. */
+.lay-editor {
+  display: grid;
+  grid-template-columns: 132px minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+}
+.lay-presets {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 70vh;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+.lay-preset {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+  padding: 4px;
+  text-align: center;
+}
+.lay-thumb {
+  position: relative;
+  display: block;
+  aspect-ratio: 16 / 9;
+  background: #0b0f15;
+  border: 1px solid var(--border);
+}
+.lay-thumb i {
+  position: absolute;
+  box-sizing: border-box;
+  background: #3a4656;
+  border: 1px solid #0b0f15;
+}
+.lay-preset:hover .lay-thumb i {
+  background: var(--accent);
+}
+.lay-canvas {
+  position: relative;
+  width: 100%;
+  aspect-ratio: var(--ar, 1.7778);
+  overflow: hidden;
+  touch-action: none;
+  background-color: #05070b;
+  background-image:
+    linear-gradient(to right, rgba(127, 150, 180, 0.14) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(127, 150, 180, 0.14) 1px, transparent 1px);
+  background-size: calc(100% / 12) calc(100% / 12);
+  border: 2px solid var(--border);
+  border-radius: 6px;
+}
+.lay-cell {
+  position: absolute;
+  box-sizing: border-box;
+  display: flex;
+  align-items: flex-end;
+  padding: 4px;
+  overflow: hidden;
+  cursor: move;
+  user-select: none;
+  background: rgba(37, 99, 235, 0.28);
+  border: 2px solid var(--accent);
+}
+.lay-cell.dragging {
+  background: rgba(37, 99, 235, 0.5);
+  z-index: 2;
+}
+.lay-no {
+  position: absolute;
+  top: 3px;
+  left: 6px;
+  font-size: 15px;
+  color: #4ade80;
+  pointer-events: none;
+}
+.lay-del {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  line-height: 1;
+}
+.lay-pick {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  font-size: 12px;
+}
+.lay-handle {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 16px;
+  height: 16px;
+  cursor: nwse-resize;
+  background: linear-gradient(135deg, transparent 50%, var(--accent) 50%);
+}
+
+/* Live view: the stage keeps the layout's shape; fullscreen scales it to the screen with black bars if needed. */
+.lay-view {
+  display: grid;
+  place-items: center;
+  background: #000;
+  border-radius: 6px;
+}
+.lay-view:fullscreen {
+  border-radius: 0;
+}
+.mv-wall.lay-stage {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: var(--ar, 1.7778);
+  margin: 0;
+  padding: 0;
+  border-radius: 0;
+  background: #000;
+}
+.lay-view:fullscreen .mv-wall.lay-stage {
+  width: min(100vw, calc(100vh * var(--ar, 1.7778)));
+}
+.lay-slot {
+  position: absolute;
+  box-sizing: border-box;
+  padding: 1px;
+}
+.lay-slot[data-empty] {
+  display: grid;
+  place-items: center;
+  color: #6b7a8c;
+  font-size: 12px;
+  border: 1px dashed #2a3340;
+}
+.lay-slot .mv-tile {
+  position: absolute;
+  inset: 1px;
+  width: auto;
+  height: auto;
+  aspect-ratio: auto;
+}
+.lay-slot .mv-img {
+  object-fit: cover;
+}
+@media (max-width: 800px) {
+  .lay-editor {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .lay-presets {
+    flex-direction: row;
+    max-height: none;
+    overflow-x: auto;
+  }
+  .lay-preset {
+    flex: 0 0 110px;
+  }
+}
+
+/* Fields and grids hidden by script stay hidden whatever display they otherwise have. */
+.drm-field[hidden],
+.drm-grid[hidden] {
+  display: none;
 }

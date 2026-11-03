@@ -118,7 +118,7 @@ srtRouter.post(
         m.watch(id);
         break;
       case 'record':
-        m.record(id, body.on === true);
+        m.record(id, body.on === true, body.segmentMin === undefined ? undefined : Number(body.segmentMin));
         break;
       default:
         return unknown(res);

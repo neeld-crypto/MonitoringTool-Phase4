@@ -214,10 +214,10 @@ export class SrtChannel {
     this.host.broadcast('snapshot', { ch: this.id, snapshot: this.session.snapshot() });
   }
   /** Starts or stops recording the incoming stream into segment files. */
-  record(on) {
-    this.session.setRecording(on);
-    const s = this.session.opts;
-    this.log('INFO', 'control', on ? `recording started (${Math.round(s.recordSegmentSec / 60)} min segments, kept ${s.recordKeepHours} h)` : 'recording stopped');
+  record(on, segmentMin) {
+    this.session.setRecording(on, segmentMin);
+    const s = this.session;
+    this.log('INFO', 'control', on ? `recording started (${Math.round(s.recordSegmentSec / 60)} min segments, kept ${s.opts.recordKeepHours} h)` : 'recording stopped');
     this.host.broadcast('snapshot', { ch: this.id, snapshot: this.session.snapshot() });
   }
   recordings() {

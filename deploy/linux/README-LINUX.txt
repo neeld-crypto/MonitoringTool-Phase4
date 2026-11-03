@@ -45,7 +45,7 @@ Pulse on Ubuntu
 Files, all created in this folder:
   logs/<date>/all-channels.log   the alerts of every channel (and server messages)
   logs/<date>/<channel name>.log everything about one channel, named after it, continued when it is stopped and started
-  recordings/ch<n>/<time>.ts     recordings (Recordings tab: start recording, download, delete). 10-minute files,
+  recordings/ch<n>/<time>.ts     recordings (Recordings tab: start recording, download, delete). 5-60 minute files (chosen in the tab),
                                  copied from the stream as received; files older than 24 hours are deleted by
                                  Pulse itself (PULSE_RECORD_SEGMENT_MIN, PULSE_RECORD_KEEP_HOURS). A 6 Mbps feed
                                  is about 65 GB a day, so check the free disk space:  df -h

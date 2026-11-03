@@ -47,12 +47,12 @@ Every call that changes something returns the full status object.
 | POST | `/__srt/ch/:id/stop` | | stop it |
 | POST | `/__srt/ch/:id/copy-rules` | | copy this channel's alert rules to all channels |
 | POST | `/__srt/ch/:id/watch` | | make this the channel with a browser preview |
-| POST | `/__srt/ch/:id/record` | `{ on: boolean }` | start / stop recording the incoming stream as segment files (SRT and UDP, channel must be running; ends when the channel stops) |
+| POST | `/__srt/ch/:id/record` | `{ on: boolean, segmentMin?: 5, 10, 15, 20, 30 or 60 }` | start / stop recording the incoming stream as segment files (SRT and UDP, channel must be running; ends when the channel stops) |
 | GET | `/__srt/ch/:id/recordings` | | `{ files: [{ name, size, startAt, modifiedAt }], segmentSec, keepHours, channelName }`, newest first |
 | GET | `/__srt/ch/:id/recordings/:file` | | download one segment (`YYYYMMDD_HHMMSS.ts`, an MPEG-TS copy of the stream) |
 | DELETE | `/__srt/ch/:id/recordings/:file` | | delete one segment; returns the new list |
 
-Recordings are written to `recordings/ch<id>/` next to the app: 10-minute files (`PULSE_RECORD_SEGMENT_MIN`) deleted after 24 hours (`PULSE_RECORD_KEEP_HOURS`). The stream is copied, never re-encoded.
+Recordings are written to `recordings/ch<id>/` next to the app: files of the length chosen when recording starts (default `PULSE_RECORD_SEGMENT_MIN`, 10 minutes) deleted after 24 hours (`PULSE_RECORD_KEEP_HOURS`). The stream is copied, never re-encoded.
 | PUT | `/__srt/ch/:id` | `{ name, thresholds }` | rename / change alert rules |
 | DELETE | `/__srt/ch/:id` | | stop and remove |
 | POST | `/__srt/start-all`, `/__srt/stop-all` | | start-all launches one by one and stops at the CPU limit |

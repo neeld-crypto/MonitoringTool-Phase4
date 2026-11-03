@@ -1,4 +1,6 @@
 import { badge, dataTable, h } from '../dom';
+/** Must match RECORD_SEGMENT_MINUTES on the server. */
+const SEGMENT_MINUTES = [5, 10, 15, 20, 30, 60];
 /** Re-read the list of files at most this often while the tab is open. */
 const REFRESH_MS = 5000;
 const clock = (t) => new Date(t).toLocaleString([], { hour12: false });
@@ -8,7 +10,7 @@ const length = (sec) => {
   return s >= 60 ? `${Math.floor(s / 60)}m ${String(s % 60).padStart(2, '0')}s` : `${s}s`;
 };
 /**
- * Recordings tab: record the selected channel's incoming stream on the server as 10-minute segment files (a plain
+ * Recordings tab: record the selected channel's incoming stream on the server as segment files of 5 to 60 minutes (a plain
  * copy, nothing is re-encoded), see the files and download or delete them. The server removes old segments by itself.
  */
 export class RecordingsTab {
@@ -17,12 +19,18 @@ export class RecordingsTab {
   head = h('div');
   list = h('div');
   note = h('p', { class: 'small' });
+  segment = h(
+    'select',
+    { 'aria-label': 'Segment length' },
+    SEGMENT_MINUTES.map((m) => h('option', { value: String(m) }, `${m} min files`)),
+  );
   data = null;
   dataFor = -1;
   fetchedAt = 0;
   fetching = false;
   constructor(client) {
     this.client = client;
+    this.segment.value = '10';
     this.el.append(this.head, this.note, this.list);
   }
   say(text, error = false) {
@@ -50,7 +58,7 @@ export class RecordingsTab {
     const ch = this.client.current;
     if (!ch) return;
     try {
-      await this.client.record(ch.id, on);
+      await this.client.record(ch.id, on, Number(this.segment.value));
       this.say(on ? 'Recording started.' : 'Recording stopped.');
       this.fetchedAt = 0;
       this.render();
@@ -83,13 +91,17 @@ export class RecordingsTab {
     }
     const rec = ch.snapshot.recording;
     const hls = ch.snapshot.config?.mode === 'hls' || ch.kind === 'hls';
-    const segMin = this.data ? Math.round(this.data.segmentSec / 60) : 10;
+    // The running recording's length wins; before that, what the list is set to.
+    const segMin = rec ? Math.round(rec.segmentSec / 60) : Number(this.segment.value);
+    if (rec) this.segment.value = String(segMin);
+    this.segment.disabled = Boolean(rec);
     const keep = this.data?.keepHours ?? 24;
     this.head.replaceChildren(
       h('h3', null, `${ch.name}: recordings`),
       h(
         'div',
         { class: 'srt-actions' },
+        this.segment,
         rec
           ? h('button', { type: 'button', class: 'danger', onclick: () => void this.toggle(false) }, '■ Stop recording')
           : h(

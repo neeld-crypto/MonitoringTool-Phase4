@@ -277,8 +277,8 @@ export class SrtClient {
     await this.run(request('POST', `ch/${id}/stop`));
   }
   /** Starts or stops recording the channel's stream into segment files on the server. */
-  async record(id, on) {
-    await this.run(request('POST', `ch/${id}/record`, { on }));
+  async record(id, on, segmentMin) {
+    await this.run(request('POST', `ch/${id}/record`, { on, segmentMin }));
   }
   /** `{ files, segmentSec, keepHours }` for the channel; files are newest first. */
   recordings(id) {

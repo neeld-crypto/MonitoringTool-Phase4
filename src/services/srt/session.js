@@ -277,6 +277,8 @@ const STALL_MS = 2000;
 const HLS_POLL_MS = 3000;
 /** Stop feeding the viewer when it falls this far behind (bytes queued), instead of growing memory. */
 const VIEWER_MAX_QUEUE = 8 * 1024 * 1024;
+/** Segment lengths a recording can be started with. */
+export const RECORD_SEGMENT_MINUTES = [5, 10, 15, 20, 30, 60];
 /** Monitoring should never starve the rest of the computer (or the browser playing the preview). */
 function lowerPriority(p) {
   try {
@@ -323,6 +325,7 @@ export class SrtSession extends EventEmitter {
   /** Recording: wanted (until the channel stops), and the ffmpeg writing the segments right now. */
   recordOn = false;
   recordSince = null;
+  recordSegmentSec = 600;
   recorder = null;
   recordRetry = null;
   constructor(opts) {
@@ -383,13 +386,13 @@ export class SrtSession extends EventEmitter {
       thumbAt: active ? this.thumbAt : null,
       lastError: this.lastError,
       recording: this.recordOn
-        ? { since: this.recordSince, segmentSec: this.opts.recordSegmentSec, keepHours: this.opts.recordKeepHours, error: this.recorder?.error ?? null }
+        ? { since: this.recordSince, segmentSec: this.recordSegmentSec, keepHours: this.opts.recordKeepHours, error: this.recorder?.error ?? null }
         : null,
       now: Date.now(),
     };
   }
   /** Records the incoming stream as segment files while the channel runs (not for HLS, which has no raw stream here). */
-  setRecording(on) {
+  setRecording(on, segmentMin) {
     if (on === this.recordOn) return;
     if (!on) {
       this.recordOn = false;
@@ -400,6 +403,10 @@ export class SrtSession extends EventEmitter {
     if (this.stopped) throw new Error('Start the channel first, then record');
     if (this.cfg?.mode === 'hls') throw new Error('Recording is not available for HLS channels');
     if (!this.opts.recordDir) throw new Error('Recording is not set up on this server');
+    if (segmentMin !== undefined && !RECORD_SEGMENT_MINUTES.includes(segmentMin)) {
+      throw new Error(`Segment length must be one of ${RECORD_SEGMENT_MINUTES.join(', ')} minutes`);
+    }
+    this.recordSegmentSec = segmentMin !== undefined ? segmentMin * 60 : this.opts.recordSegmentSec;
     this.recordOn = true;
     this.recordSince = Date.now();
     if (this.procs.length) this.startRecorder();
@@ -410,7 +417,7 @@ export class SrtSession extends EventEmitter {
     const r = new Recorder({
       ffmpegPath: this.opts.ffmpegPath,
       dir: this.opts.recordDir,
-      segmentSec: this.opts.recordSegmentSec,
+      segmentSec: this.recordSegmentSec,
       keepHours: this.opts.recordKeepHours,
       onSpawn: lowerPriority,
       onLog: (line) => this.emit('log', `recording: ${line}`),

@@ -215,8 +215,8 @@ export class SrtMonitor {
     });
   }
   /** Recording of one channel: start / stop, the list of segment files, and one file for download or delete. */
-  record(id, on) {
-    this.channel(id).record(on === true);
+  record(id, on, segmentMin) {
+    this.channel(id).record(on === true, segmentMin);
     this.broadcast('status', this.status());
   }
   recordings(id) {

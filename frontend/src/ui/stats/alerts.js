@@ -1,4 +1,5 @@
 import { enableDesktopNotifications, loadPrefs, savePrefs } from '../../srt/notify';
+import { ruleHelp } from '../../srt/rule-labels';
 import { DEFAULT_NOTIFY, DEFAULT_THRESHOLDS } from '../../srt/types';
 import { badge, dataTable, h } from '../dom';
 const KIND = { critical: 'warn', warning: 'out', info: 'other' };
@@ -299,7 +300,11 @@ export class AlertsTab {
   alertList(list) {
     return dataTable(
       ['Since', 'Level', 'Alert'],
-      list.map((a) => [h('span', { class: 'mono' }, clock(a.at)), badge(a.severity, KIND[a.severity]), a.message]),
+      list.map((a) => [
+        h('span', { class: 'mono' }, clock(a.at)),
+        badge(a.severity, KIND[a.severity]),
+        [a.message, ruleHelp(a.rule) ? h('div', { class: 'muted small alert-help' }, `What to check: ${ruleHelp(a.rule)}`) : ''],
+      ]),
     );
   }
 }

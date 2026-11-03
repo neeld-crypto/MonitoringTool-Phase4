@@ -1,4 +1,9 @@
 node_modules/
+
+# Secrets (copy .env.example to .env)
+.env
+.env.*
+!.env.example
 dist/
 *.log
 .DS_Store

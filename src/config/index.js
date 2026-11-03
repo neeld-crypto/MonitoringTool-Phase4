@@ -22,6 +22,13 @@ const appDir = process.env.PLAYPROBE_HOME
     ? dirname(process.execPath)
     : resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 
+// Settings and secrets can live in a .env file next to the app; real environment variables win over it.
+try {
+  process.loadEnvFile(join(appDir, '.env'));
+} catch {
+  /* no .env file */
+}
+
 // A packaged bundle has dist/ next to the server; a checkout has the frontend build in frontend/dist.
 const dist = !process.env.PLAYPROBE_HOME && existsSync(join(appDir, 'frontend', 'dist')) ? join(appDir, 'frontend', 'dist') : join(appDir, 'dist');
 
@@ -70,8 +77,8 @@ export const config = {
   noBrowser: process.env.PLAYPROBE_NO_BROWSER === '1',
   auth: {
     enabled: (process.env.PULSE_AUTH ?? '').toLowerCase() !== 'off',
-    user: process.env.PULSE_USER || 'skandha',
-    password: process.env.PULSE_PASSWORD || 'skandha@123',
+    user: process.env.PULSE_USER || 'Skandha',
+    password: process.env.PULSE_PASSWORD || 'Skandha@123',
     sessionMs: (Number(process.env.PULSE_SESSION_HOURS) > 0 ? Number(process.env.PULSE_SESSION_HOURS) : 12) * 3600_000,
   },
 };

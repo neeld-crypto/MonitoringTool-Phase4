@@ -47,7 +47,7 @@ export function evaluate(snap, th, hist, now) {
         key: 'no_connection',
         rule: 'no_connection',
         severity: 'critical',
-        message: `${snap.config?.mode === 'hls' ? 'Cannot load the HLS stream' : listener ? 'No encoder has connected' : 'Cannot connect to the SRT source'} for ${Math.round(snap.waitingForMs / 1000)} s${snap.lastError ? `: ${snap.lastError}` : ''}`,
+        message: `${snap.config?.mode === 'hls' ? 'Cannot load the HLS stream' : listener ? 'Waiting for the encoder: nothing has connected' : 'Cannot reach the SRT source'} for ${Math.round(snap.waitingForMs / 1000)} s${snap.lastError ? `. ${snap.lastError}` : ''}`,
       });
     }
     return out;
@@ -60,8 +60,8 @@ export function evaluate(snap, th, hist, now) {
       severity: 'critical',
       message:
         snap.config?.mode === 'hls'
-          ? `The playlist has had no new segment for ${(snap.msSinceData / 1000).toFixed(0)} s`
-          : `No data received for ${(snap.msSinceData / 1000).toFixed(0)} s`,
+          ? `Stream stopped: the playlist has had no new segment for ${(snap.msSinceData / 1000).toFixed(0)} s`
+          : `No signal: connected, but no video data for ${(snap.msSinceData / 1000).toFixed(0)} s`,
     });
   }
   const ts = snap.ts;
@@ -73,7 +73,7 @@ export function evaluate(snap, th, hist, now) {
         rule: 'bitrate_drop',
         severity: 'warning',
         holdSec: 3,
-        message: `Bitrate dropped to ${Math.round(ts.bitrateKbps)} kbps (average ${Math.round(base)} kbps)`,
+        message: `Picture data fell to ${Math.round(ts.bitrateKbps)} kbps (normally about ${Math.round(base)} kbps). The encoder may be struggling`,
         details: { kbps: Math.round(ts.bitrateKbps), baselineKbps: Math.round(base) },
       });
     }
@@ -83,7 +83,7 @@ export function evaluate(snap, th, hist, now) {
         rule: 'bitrate_low',
         severity: 'warning',
         holdSec: 3,
-        message: `Bitrate ${Math.round(ts.bitrateKbps)} kbps is below the ${th.minBitrateKbps} kbps minimum`,
+        message: `Stream is only ${Math.round(ts.bitrateKbps)} kbps, below the ${th.minBitrateKbps} kbps minimum. Quality will suffer`,
       });
     }
     // Continuity, sync, PCR and PSI timing only mean something on the bytes as received. When ffmpeg
@@ -96,18 +96,18 @@ export function evaluate(snap, th, hist, now) {
         key: 'ts_cc',
         rule: 'ts_cc',
         severity: 'warning',
-        message: `${cc} continuity counter error(s) in 10 s`,
+        message: `${cc} lost or repeated packet(s) in the last 10 s (continuity errors). Expect picture glitches`,
         details: { errors: cc },
       });
     }
     if (wire && hist.delta('sync', now) >= 1) {
-      add({ key: 'ts_sync', rule: 'ts_sync', severity: 'critical', message: 'MPEG-TS sync lost (0x47 sync byte missing)' });
+      add({ key: 'ts_sync', rule: 'ts_sync', severity: 'critical', message: 'Stream is unreadable: the receiver lost sync with the data (TS sync loss)' });
     }
     if (wire && hist.delta('tei', now) >= 1) {
-      add({ key: 'ts_tei', rule: 'ts_tei', severity: 'warning', message: 'Transport error indicator set on received packets' });
+      add({ key: 'ts_tei', rule: 'ts_tei', severity: 'warning', message: 'Damaged packets are arriving from the source (transport error flag set)' });
     }
     if (wire && hist.delta('crc', now) >= 1) {
-      add({ key: 'ts_crc', rule: 'ts_crc', severity: 'warning', message: 'PAT/PMT CRC error' });
+      add({ key: 'ts_crc', rule: 'ts_crc', severity: 'warning', message: 'Stream table is corrupt (PAT/PMT CRC error). The player may not find the video or audio' });
     }
     for (const [name, since] of wire
       ? [
@@ -120,7 +120,7 @@ export function evaluate(snap, th, hist, now) {
           key: `ts_${name.toLowerCase()}`,
           rule: `ts_${name.toLowerCase()}`,
           severity: 'critical',
-          message: since === null ? `No ${name} received` : `${name} not seen for ${fmtMs(since)} (limit ${fmtMs(th.psiTimeoutMs)})`,
+          message: since === null ? `No ${name} table received: the player cannot find the programme` : `${name} table missing for ${fmtMs(since)} (limit ${fmtMs(th.psiTimeoutMs)}). Players may lose the programme`,
         });
       }
     }
@@ -129,7 +129,7 @@ export function evaluate(snap, th, hist, now) {
         key: 'ts_pcr',
         rule: 'ts_pcr',
         severity: 'warning',
-        message: `PCR repetition ${fmtMs(ts.pcrIntervalMaxMs)} exceeds ${fmtMs(th.pcrMaxMs)}`,
+        message: `Timing signal (PCR) arrives too slowly: ${fmtMs(ts.pcrIntervalMaxMs)} between packets, limit ${fmtMs(th.pcrMaxMs)}. Can cause stutter`,
         details: { pcrMs: Math.round(ts.pcrIntervalMaxMs) },
       });
     }
@@ -143,7 +143,7 @@ export function evaluate(snap, th, hist, now) {
           key: `pid_missing:${p.pid}`,
           rule: 'pid_missing',
           severity: 'critical',
-          message: `${p.kind} PID ${pid(p.pid)} (${p.type}) missing for ${p.lastSeenAgoSec.toFixed(0)} s`,
+          message: `The ${p.kind} stream (PID ${pid(p.pid)}, ${p.type}) disappeared ${p.lastSeenAgoSec.toFixed(0)} s ago`,
           details: { pid: p.pid },
         });
       }
@@ -157,7 +157,7 @@ export function evaluate(snap, th, hist, now) {
         rule: 'link_rtt',
         severity: 'warning',
         holdSec: 3,
-        message: `SRT RTT ${link.rttMs.toFixed(0)} ms exceeds ${th.rttMs} ms`,
+        message: `Network delay is high: ${link.rttMs.toFixed(0)} ms (limit ${th.rttMs} ms)`,
         details: { rttMs: link.rttMs },
       });
     }
@@ -169,7 +169,7 @@ export function evaluate(snap, th, hist, now) {
         key: 'link_loss',
         rule: 'link_loss',
         severity: 'warning',
-        message: `SRT packet loss ${lossPct.toFixed(2)}% over 10 s (${lost} packets)`,
+        message: `Network is losing packets: ${lossPct.toFixed(2)}% in the last 10 s (${lost} packets). SRT is trying to recover them`,
         details: { lossPct: Number(lossPct.toFixed(2)) },
       });
     }
@@ -179,7 +179,7 @@ export function evaluate(snap, th, hist, now) {
         key: 'link_dropped',
         rule: 'link_dropped',
         severity: 'critical',
-        message: `${dropped} SRT packet(s) dropped (not recovered in time): raise the latency or fix the link`,
+        message: `${dropped} packet(s) lost for good: SRT could not recover them in time. Picture is damaged. Raise the latency or fix the link`,
         details: { dropped },
       });
     }
@@ -190,7 +190,7 @@ export function evaluate(snap, th, hist, now) {
         key: 'link_retrans',
         rule: 'link_retrans',
         severity: 'warning',
-        message: `SRT retransmissions ${retransPct.toFixed(1)}% over 10 s`,
+        message: `Network is unstable: ${retransPct.toFixed(1)}% of packets had to be re-sent in the last 10 s`,
         details: { retransPct: Number(retransPct.toFixed(1)) },
       });
     }
@@ -203,7 +203,7 @@ export function evaluate(snap, th, hist, now) {
         key: 'decode_errors',
         rule: 'decode_errors',
         severity: 'warning',
-        message: `${dec} media decode error(s) in 10 s (corrupt or missing data)`,
+        message: `Picture or sound is damaged: ${dec} decode error(s) in the last 10 s`,
         details: { errors: dec },
       });
     }
@@ -212,7 +212,7 @@ export function evaluate(snap, th, hist, now) {
         key: 'video_black',
         rule: 'video_black',
         severity: 'critical',
-        message: `Black video for ${av.blackForSec.toFixed(0)} s`,
+        message: `Black screen for ${av.blackForSec.toFixed(0)} s`,
         details: { seconds: Math.round(av.blackForSec) },
       });
     }
@@ -221,7 +221,7 @@ export function evaluate(snap, th, hist, now) {
         key: 'audio_silence',
         rule: 'audio_silence',
         severity: 'critical',
-        message: `Audio silent for ${av.silentForSec.toFixed(0)} s`,
+        message: `No sound for ${av.silentForSec.toFixed(0)} s`,
         details: { seconds: Math.round(av.silentForSec) },
       });
     }

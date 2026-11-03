@@ -11,8 +11,8 @@ User=CHANGE_ME
 WorkingDirectory=/home/CHANGE_ME/playprobe
 Environment=HOST=0.0.0.0
 # The sign-in of the page (these are also the built-in defaults).
-Environment=PULSE_USER=skandha
-Environment=PULSE_PASSWORD=skandha@123
+Environment=PULSE_USER=Skandha
+Environment=PULSE_PASSWORD=Skandha@123
 ExecStart=/home/CHANGE_ME/playprobe/start.sh
 Restart=always
 RestartSec=3

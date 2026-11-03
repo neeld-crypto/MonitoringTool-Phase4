@@ -1,5 +1,5 @@
 import { historyStore } from '../../srt/history-store';
-import { ruleLabel } from '../../srt/rule-labels';
+import { ruleHelp, ruleLabel } from '../../srt/rule-labels';
 import { h } from '../dom';
 const WINDOWS = [
   ['1 min', 60e3],
@@ -354,7 +354,8 @@ export class SrtChartView {
     };
     for (const a of alerts) {
       const label = a.state === 'event' ? 'Event' : ruleLabel(a.rule);
-      if (raisedOn(a)) mark(a.at, sevOf(a), `${clock(a.at)} ${label}\n${a.message}`, false);
+      const help = a.state === 'event' ? '' : ruleHelp(a.rule);
+      if (raisedOn(a)) mark(a.at, sevOf(a), `${clock(a.at)} ${label}\n${a.message}${help ? `\nCheck: ${help}` : ''}`, false);
       if (a.clearedAt && a.state !== 'event' && this.shows('rec'))
         mark(a.clearedAt, RECOVERED, `${clock(a.clearedAt)} Recovered: ${label}\n${a.message}`, true);
     }

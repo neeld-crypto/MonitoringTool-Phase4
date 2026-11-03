@@ -1,6 +1,7 @@
 import { DEFAULT_THRESHOLDS } from '../../srt/types';
 import { badge, dataTable, h, kvTable } from '../dom';
 import { SrtChartView } from '../srt/chart';
+import { healthPanel } from './health';
 const ms = (v) => (v === null || v === undefined ? '—' : `${Math.round(v)} ms`);
 const num = (v, digits = 0) => (v === null || v === undefined ? '—' : v.toFixed(digits));
 const hex = (pid) => `0x${pid.toString(16).toUpperCase().padStart(4, '0')}`;
@@ -53,6 +54,8 @@ export class SrtTab {
     this.body.replaceChildren(
       h('h3', null, c.current?.name ?? 'SRT'),
       this.connection(s),
+      h('h3', null, 'Stream health'),
+      healthPanel(s, c.alerts),
       ...(s.tsSource === 'remuxed'
         ? [
             h(

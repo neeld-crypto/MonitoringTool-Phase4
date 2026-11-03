@@ -1855,6 +1855,66 @@ pre .hl {
   border-left-color: var(--danger);
 }
 
+.health-group h4 {
+  margin: 12px 0 4px;
+  font-size: 12px;
+  color: var(--muted, inherit);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.health-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.health-table td,
+.health-table th {
+  padding: 4px 6px;
+  text-align: left;
+  font-weight: normal;
+  vertical-align: top;
+  border-top: 1px solid var(--border);
+}
+
+.health-table td:first-child {
+  width: 18px;
+}
+
+.health-table td:nth-child(3) {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.health-table tr.bad th {
+  font-weight: 600;
+}
+
+.health-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.health-dot.good {
+  background: var(--ok);
+}
+
+.health-dot.bad {
+  background: var(--danger);
+}
+
+.health-help {
+  margin-top: 2px;
+  color: var(--text, inherit);
+}
+
+.alert-help {
+  margin-top: 2px;
+}
+
 .alert-settings .drm-grid {
   margin-bottom: 8px;
 }

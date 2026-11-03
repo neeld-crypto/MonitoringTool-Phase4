@@ -10,6 +10,9 @@ export function getMonitor() {
     previewDir: config.previewDir,
     settingsPath: config.settingsPath,
     logDir: config.logDir,
+    recordDir: config.recordingsDir,
+    recordSegmentSec: config.recordSegmentSec,
+    recordKeepHours: config.recordKeepHours,
   });
   return monitor;
 }

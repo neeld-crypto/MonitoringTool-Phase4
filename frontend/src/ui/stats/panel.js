@@ -8,6 +8,7 @@ import { LogTab } from './log';
 import { ManifestTab } from './manifest';
 import { NetworkTab } from './network';
 import { OverviewTab } from './overview';
+import { RecordingsTab } from './recordings';
 import { ScteTab } from './scte';
 import { TracksTab } from './tracks';
 const TAB_KEY = 'sap.tab.v1';
@@ -58,6 +59,7 @@ export class StatsPanel {
         source: 'srt',
         count: () => srt.totalActive,
       },
+      { id: 'recordings', label: 'Recordings', view: new RecordingsTab(srt), events: ['snapshot', 'status'], source: 'srt' },
     );
     let saved = null;
     try {

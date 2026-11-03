@@ -1,7 +1,9 @@
+import { existsSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { cueDirection, cueDuration, parseScte35, summarizeScte35 } from '../../parser/scte35.js';
 import { kindLabel } from '../../constants/srt.js';
 import { AlertEngine, EvalHistory, evaluate } from './alerts.js';
+import { SEGMENT_FILE, listSegments } from './recorder.js';
 import { SrtSession, validateConfig } from './session.js';
 /** Condensed one-line state, written to the log every STATS_LOG_MS. */
 const STATS_LOG_MS = 30_000;
@@ -37,6 +39,9 @@ export class SrtChannel {
       previewDir: join(opts.previewRoot, `ch${id}`),
       previewUrlBase: `/__srt/hls/ch${id}/`,
       thumbPath: join(opts.previewRoot, 'thumb', `${id}.jpg`),
+      recordDir: opts.recordRoot ? join(opts.recordRoot, `ch${id}`) : null,
+      recordSegmentSec: opts.recordSegmentSec,
+      recordKeepHours: opts.recordKeepHours,
     });
     this.engine = new AlertEngine((alert, notify) => {
       const a = { ...alert, channelId: this.id, channelName: this.name };
@@ -207,6 +212,30 @@ export class SrtChannel {
     this.hist.reset();
     this.log('INFO', 'control', 'stopped');
     this.host.broadcast('snapshot', { ch: this.id, snapshot: this.session.snapshot() });
+  }
+  /** Starts or stops recording the incoming stream into segment files. */
+  record(on) {
+    this.session.setRecording(on);
+    const s = this.session.opts;
+    this.log('INFO', 'control', on ? `recording started (${Math.round(s.recordSegmentSec / 60)} min segments, kept ${s.recordKeepHours} h)` : 'recording stopped');
+    this.host.broadcast('snapshot', { ch: this.id, snapshot: this.session.snapshot() });
+  }
+  recordings() {
+    const dir = this.session.opts.recordDir;
+    return dir ? listSegments(dir) : [];
+  }
+  /** Full path of one segment, or null for a name that is not a segment of this channel. */
+  recordingFile(name) {
+    const dir = this.session.opts.recordDir;
+    if (!dir || !SEGMENT_FILE.test(name)) return null;
+    const file = join(dir, name);
+    return existsSync(file) ? file : null;
+  }
+  deleteRecording(name) {
+    const file = this.recordingFile(name);
+    if (!file) throw new Error('No such recording');
+    rmSync(file, { force: true });
+    this.log('INFO', 'control', `recording ${name} deleted`);
   }
   rename(name) {
     if (name === this.name) return;

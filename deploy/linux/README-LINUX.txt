@@ -45,6 +45,10 @@ Pulse on Ubuntu
 Files, all created in this folder:
   logs/<date>/all-channels.log   the alerts of every channel (and server messages)
   logs/<date>/<channel name>.log everything about one channel, named after it, continued when it is stopped and started
+  recordings/ch<n>/<time>.ts     recordings (Recordings tab: start recording, download, delete). 10-minute files,
+                                 copied from the stream as received; files older than 24 hours are deleted by
+                                 Pulse itself (PULSE_RECORD_SEGMENT_MIN, PULSE_RECORD_KEEP_HOURS). A 6 Mbps feed
+                                 is about 65 GB a day, so check the free disk space:  df -h
   .playprobe/                    settings, layouts (may contain the Slack webhook)
 Old log days are not deleted: remove logs/<old date>/ folders now and then.
 Slack alerts: in Slack create an Incoming Webhook for the channel (api.slack.com/apps > your app > Incoming Webhooks

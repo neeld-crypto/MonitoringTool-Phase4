@@ -276,6 +276,20 @@ export class SrtClient {
   async stop(id) {
     await this.run(request('POST', `ch/${id}/stop`));
   }
+  /** Starts or stops recording the channel's stream into segment files on the server. */
+  async record(id, on) {
+    await this.run(request('POST', `ch/${id}/record`, { on }));
+  }
+  /** `{ files, segmentSec, keepHours }` for the channel; files are newest first. */
+  recordings(id) {
+    return request('GET', `ch/${id}/recordings`);
+  }
+  async deleteRecording(id, name) {
+    return request('DELETE', `ch/${id}/recordings/${name}`);
+  }
+  recordingUrl(id, name) {
+    return `/__srt/ch/${id}/recordings/${name}`;
+  }
   /**
    * Queues every stopped channel that has saved connection settings and returns how many. The server starts them one by
    * one and stops at its CPU limit; what it could not start arrives as a `notice` event.

@@ -10,6 +10,7 @@ import { HlsProbe } from '../../parser/hls-probe.js';
 import { AvDetector, SILENCE_MIN_SEC, SILENCE_NOISE_DB, friendlyError } from '../../parser/av-detect.js';
 import { parseLinkStats } from '../../parser/link-stats.js';
 import { TsAnalyzer } from '../../parser/ts-analyzer.js';
+import { Recorder } from './recorder.js';
 export const PREVIEW_PATH = '/__srt/hls/';
 const HOST_RE = /^[A-Za-z0-9_.:[\]-]{1,253}$/;
 /** Validates untrusted JSON from the browser into a SrtConfig. Throws with a user-facing message. */
@@ -319,6 +320,11 @@ export class SrtSession extends EventEmitter {
   probe = null;
   probing = false;
   lastPollAt = 0;
+  /** Recording: wanted (until the channel stops), and the ffmpeg writing the segments right now. */
+  recordOn = false;
+  recordSince = null;
+  recorder = null;
+  recordRetry = null;
   constructor(opts) {
     super();
     this.opts = opts;
@@ -347,6 +353,8 @@ export class SrtSession extends EventEmitter {
     if (this.timer) clearInterval(this.timer);
     if (this.retry) clearTimeout(this.retry);
     this.timer = this.retry = null;
+    this.recordOn = false;
+    this.recordSince = null;
     this.killProcesses();
     this.probe = null;
     this.clearPreview();
@@ -374,8 +382,54 @@ export class SrtSession extends EventEmitter {
       previewUrl: this.ingest !== 'hls' && this.previewReady && active ? `${this.opts.previewUrlBase ?? PREVIEW_PATH}index.m3u8` : null,
       thumbAt: active ? this.thumbAt : null,
       lastError: this.lastError,
+      recording: this.recordOn
+        ? { since: this.recordSince, segmentSec: this.opts.recordSegmentSec, keepHours: this.opts.recordKeepHours, error: this.recorder?.error ?? null }
+        : null,
       now: Date.now(),
     };
+  }
+  /** Records the incoming stream as segment files while the channel runs (not for HLS, which has no raw stream here). */
+  setRecording(on) {
+    if (on === this.recordOn) return;
+    if (!on) {
+      this.recordOn = false;
+      this.recordSince = null;
+      this.killRecorder();
+      return;
+    }
+    if (this.stopped) throw new Error('Start the channel first, then record');
+    if (this.cfg?.mode === 'hls') throw new Error('Recording is not available for HLS channels');
+    if (!this.opts.recordDir) throw new Error('Recording is not set up on this server');
+    this.recordOn = true;
+    this.recordSince = Date.now();
+    if (this.procs.length) this.startRecorder();
+  }
+  startRecorder() {
+    this.killRecorder();
+    if (!this.recordOn || this.stopped) return;
+    const r = new Recorder({
+      ffmpegPath: this.opts.ffmpegPath,
+      dir: this.opts.recordDir,
+      segmentSec: this.opts.recordSegmentSec,
+      keepHours: this.opts.recordKeepHours,
+      onSpawn: lowerPriority,
+      onLog: (line) => this.emit('log', `recording: ${line}`),
+      // ffmpeg died on its own: try again shortly while recording is still wanted.
+      onExit: () => {
+        if (this.recorder !== r) return;
+        this.recorder = null;
+        if (this.recordOn && !this.stopped) this.recordRetry = setTimeout(() => this.startRecorder(), 3000);
+      },
+    });
+    this.recorder = r;
+    r.start();
+  }
+  killRecorder() {
+    if (this.recordRetry) clearTimeout(this.recordRetry);
+    this.recordRetry = null;
+    const r = this.recorder;
+    this.recorder = null;
+    r?.stop();
   }
   // ---------------------------------------------------------------- internals
   setState(state) {
@@ -459,6 +513,7 @@ export class SrtSession extends EventEmitter {
   }
   killProcesses() {
     this.killViewer();
+    this.killRecorder();
     for (const p of this.procs) {
       p.removeAllListeners('close');
       p.kill();
@@ -505,6 +560,7 @@ export class SrtSession extends EventEmitter {
     this.procs = [ff];
     lowerPriority(ff);
     if (this.watching && !hls) this.startViewer();
+    if (this.recordOn && !hls) this.startRecorder();
     ff.on('error', (err) => this.failed(`Could not start ffmpeg: ${err.message}`));
     ff.on('close', (code) => this.processEnded(`ffmpeg exited${code ? ` with code ${code}` : ''}`));
     createInterface({ input: ff.stderr }).on('line', (line) => this.onFfmpegLine(line));
@@ -630,6 +686,7 @@ export class SrtSession extends EventEmitter {
   onData(chunk) {
     const v = this.viewer;
     if (v?.stdin?.writable && v.stdin.writableLength < VIEWER_MAX_QUEUE) v.stdin.write(chunk);
+    this.recorder?.write(chunk);
     const now = performance.now();
     this.lastDataAt = now;
     this.ts.push(chunk, now);

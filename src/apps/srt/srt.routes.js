@@ -117,10 +117,47 @@ srtRouter.post(
       case 'watch':
         m.watch(id);
         break;
+      case 'record':
+        m.record(id, body.on === true);
+        break;
       default:
         return unknown(res);
     }
     json(res, 200, m.status());
+  }),
+);
+
+/** Recorded segments of a channel: list, download and delete (see FRONTEND_API.md). */
+srtRouter.get(
+  '/ch/:id/recordings',
+  route((m, req, res) => {
+    const id = channelId(req);
+    if (!id) return unknown(res);
+    json(res, 200, m.recordings(id));
+  }),
+);
+
+srtRouter.get(
+  '/ch/:id/recordings/:file',
+  route((m, req, res) => {
+    const id = channelId(req);
+    if (!id) return unknown(res);
+    const file = m.recordingFile(id, req.params.file);
+    if (!file) return json(res, 404, { error: 'No such recording' });
+    const name = `${m.recordings(id).channelName.replace(/[^\w.-]+/g, '_')}_${req.params.file}`;
+    res.download(file, name, (err) => {
+      if (err && !res.headersSent) json(res, 404, { error: 'No such recording' });
+    });
+  }),
+);
+
+srtRouter.delete(
+  '/ch/:id/recordings/:file',
+  route((m, req, res) => {
+    const id = channelId(req);
+    if (!id) return unknown(res);
+    m.deleteRecording(id, req.params.file);
+    json(res, 200, m.recordings(id));
   }),
 );
 

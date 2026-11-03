@@ -209,7 +209,30 @@ export class SrtMonitor {
       ffmpegPath: this.opts.ffmpegPath,
       srtLiveTransmitPath: this.liveTransmit,
       previewRoot: this.opts.previewDir,
+      recordRoot: this.opts.recordDir ?? null,
+      recordSegmentSec: this.opts.recordSegmentSec ?? 600,
+      recordKeepHours: this.opts.recordKeepHours ?? 24,
     });
+  }
+  /** Recording of one channel: start / stop, the list of segment files, and one file for download or delete. */
+  record(id, on) {
+    this.channel(id).record(on === true);
+    this.broadcast('status', this.status());
+  }
+  recordings(id) {
+    const c = this.channel(id);
+    return {
+      files: c.recordings(),
+      segmentSec: this.opts.recordSegmentSec ?? 600,
+      keepHours: this.opts.recordKeepHours ?? 24,
+      channelName: c.name,
+    };
+  }
+  recordingFile(id, name) {
+    return this.channel(id).recordingFile(name);
+  }
+  deleteRecording(id, name) {
+    this.channel(id).deleteRecording(name);
   }
   // ------------------------------------------------------------- settings
   load() {

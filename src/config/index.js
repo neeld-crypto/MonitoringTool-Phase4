@@ -12,6 +12,7 @@ import { fileURLToPath } from 'node:url';
  *   PLAYPROBE_HOME    folder holding dist/, tools/ and the data folders (the Linux bundle's start.sh sets it)
  *   PULSE_USER, PULSE_PASSWORD   the sign-in (default skandha / skandha@123); PULSE_AUTH=off turns the sign-in off
  *   PULSE_SESSION_HOURS          how long a sign-in lasts (default 12)
+ *   PULSE_RECORD_SEGMENT_MIN     length of one recorded segment (default 10); PULSE_RECORD_KEEP_HOURS how long segments are kept (default 24)
  *   FFMPEG_PATH, SRT_LIVE_TRANSMIT_PATH, SRT_WEBHOOK_URL, SRT_WEBHOOK_KIND
  */
 const embedded = sea.isSea();
@@ -74,6 +75,9 @@ export const config = {
   settingsPath: join(appDir, '.playprobe', 'srt-settings.json'),
   layoutsPath: join(appDir, '.playprobe', 'layouts.json'),
   logDir: join(appDir, 'logs'),
+  recordingsDir: join(appDir, 'recordings'),
+  recordSegmentSec: (Number(process.env.PULSE_RECORD_SEGMENT_MIN) > 0 ? Number(process.env.PULSE_RECORD_SEGMENT_MIN) : 10) * 60,
+  recordKeepHours: Number(process.env.PULSE_RECORD_KEEP_HOURS) > 0 ? Number(process.env.PULSE_RECORD_KEEP_HOURS) : 24,
   noBrowser: process.env.PLAYPROBE_NO_BROWSER === '1',
   auth: {
     enabled: (process.env.PULSE_AUTH ?? '').toLowerCase() !== 'off',

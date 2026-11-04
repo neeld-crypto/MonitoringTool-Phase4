@@ -12,6 +12,8 @@ function duration(sec) {
   const ss = s % 60;
   return hh ? `${hh}h ${mm}m ${ss}s` : mm ? `${mm}m ${ss}s` : `${ss}s`;
 }
+/** " · progressive" or " · interlaced (top field first)"; empty while the stream has not told yet. */
+const scanLabel = (v) => (v.scan === 'progressive' ? ' · progressive' : v.scan === 'interlaced' ? ` · interlaced (${v.fieldOrder})` : '');
 /** Colours a value by its alert threshold: ok / warn. */
 const level = (bad, text) => badge(text, bad ? 'warn' : 'ok');
 /** SRT tab: connection, link statistics, MPEG-TS health and audio/video health. */
@@ -151,7 +153,10 @@ export class SrtTab {
     const v = a.video;
     const au = a.audio;
     return kvTable([
-      ['Video', v ? `${v.codec}${v.width ? ` · ${v.width}×${v.height}` : ''}${v.fps ? ` · ${v.fps} fps` : ''}` : 'none detected'],
+      [
+        'Video',
+        v ? `${v.codec}${v.width ? ` · ${v.width}×${v.height}` : ''}${v.fps ? ` · ${v.fps} fps` : ''}${scanLabel(v)}` : 'none detected',
+      ],
       [
         'Audio',
         au ? `${au.codec}${au.sampleRate ? ` · ${au.sampleRate} Hz` : ''}${au.channels ? ` · ${au.channels}` : ''}` : 'none detected',

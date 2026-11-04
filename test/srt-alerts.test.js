@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_NOTIFY, DEFAULT_THRESHOLDS, SECRET_MASK } from '../src/constants/srt.js';
 import { AlertEngine, EvalHistory, evaluate } from '../src/services/srt/alerts.js';
-import { AvDetector, friendlyError } from '../src/parser/av-detect.js';
+import { AvDetector, friendlyError, scanType } from '../src/parser/av-detect.js';
 import { parseLinkStats } from '../src/parser/link-stats.js';
 import { mergeNotify, redactNotify, sanitizeThresholds } from '../src/services/srt/monitor.js';
 import { Notifier, webhookBody } from '../src/services/srt/notifiers.js';
@@ -262,11 +262,22 @@ describe('AvDetector', () => {
     d.feed("Output #0, mpegts, to 'pipe:1':");
     d.feed('  Stream #0:0: Video: h264, 640x360');
     const s = d.stats();
-    expect(s.video).toMatchObject({ codec: 'h264', width: 1280, height: 720, fps: 25 });
+    expect(s.video).toMatchObject({ codec: 'h264', width: 1280, height: 720, fps: 25, scan: 'progressive' });
     expect(s.audio).toMatchObject({ codec: 'aac', sampleRate: 48000, channels: 'stereo' });
     expect(s.streams).toHaveLength(2);
     d.feed('[srt @ 0000] Connection setup failure: wrong passphrase');
     expect(d.lastError).toContain('wrong passphrase');
+  });
+});
+describe('scanType', () => {
+  it('tells progressive from interlaced, and stays silent when ffmpeg does not say', () => {
+    expect(scanType('h264 (High), yuv420p(tv, bt709, progressive), 1920x1080, 25 fps')).toEqual({ scan: 'progressive' });
+    expect(scanType('mpeg2video (Main), yuv420p(tv, top first), 1920x1080, 25 fps')).toEqual({
+      scan: 'interlaced',
+      fieldOrder: 'top field first',
+    });
+    expect(scanType('h264 (High), yuv420p(tv, bottom coded first (swapped)), 1920x1080')).toMatchObject({ scan: 'interlaced' });
+    expect(scanType('h264 (High), yuv420p(tv, bt709), 1920x1080, 25 fps')).toEqual({});
   });
 });
 describe('friendlyError', () => {

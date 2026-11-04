@@ -61,6 +61,16 @@ export function friendlyError(line) {
 /** Longest gap between black frames that still counts as one black period (keyframes-only mode). */
 const MAX_KEYFRAME_GAP_MS = 12_000;
 const MIN_KEYFRAME_GAP_MS = 6000;
+/**
+ * Progressive or interlaced, from the field order ffmpeg prints inside the pixel format, e.g.
+ * `yuv420p(tv, bt709, progressive)` or `yuv420p(tv, bt709, top first)`. Nothing is printed until ffmpeg has seen enough
+ * of the stream, so an unknown scan type is simply left out rather than guessed.
+ */
+export function scanType(rest) {
+  if (/\bprogressive\b/.test(rest)) return { scan: 'progressive' };
+  const m = /\b(top|bottom)(?: coded)? first\b/.exec(rest);
+  return m ? { scan: 'interlaced', fieldOrder: m[1] === 'top' ? 'top field first' : 'bottom field first' } : {};
+}
 export class AvDetector {
   now;
   inInput = true;
@@ -155,6 +165,7 @@ export class AvDetector {
         width: size ? Number(size[1]) : undefined,
         height: size ? Number(size[2]) : undefined,
         fps: fps ? Number(fps[1]) : undefined,
+        ...scanType(rest),
         description: rest,
       };
     } else if (kind === 'Audio' && !this.audio) {

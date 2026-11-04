@@ -3407,3 +3407,19 @@ button.link {
 .drm-grid[hidden] {
   display: none;
 }
+
+/* Layouts: a big layout (many cells) still has wide tiles on a big screen, so the video info line is hidden by the
+   tile's own width, not by the number of cells. */
+.lay-slot {
+  container-type: inline-size;
+}
+
+.mv-wall.lay-stage[data-size='s'] .mv-info {
+  display: inline;
+}
+
+@container (max-width: 260px) {
+  .mv-wall.lay-stage[data-size='s'] .mv-info {
+    display: none;
+  }
+}

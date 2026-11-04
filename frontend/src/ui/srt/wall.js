@@ -15,10 +15,19 @@ const RENDER_MS = 300;
 const TILE_ALERT_RULES = new Set(['video_black', 'audio_silence']);
 const SEVERITY_RANK = { info: 0, warning: 1, critical: 2 };
 const dbToPct = (db) => Math.max(0, Math.min(100, ((db - METER_FLOOR_DB) / -METER_FLOOR_DB) * 100));
-function resolution(c) {
+const SHORT_CODEC = { mpeg2video: 'mpeg2' };
+/**
+ * The picture as it is detected on the stream, in broadcast shorthand: `h264 · 1080p25` (progressive) or
+ * `mpeg2 · 1080i25` (interlaced). Until the stream tells its scan type the letter is left out rather than guessed.
+ */
+export function resolution(c) {
   const v = c.snapshot.av?.video;
   if (!v?.height) return '';
-  return v.height >= 720 ? `${v.height}p` : `${v.width ?? '?'}×${v.height}`;
+  const scan = v.scan === 'progressive' ? 'p' : v.scan === 'interlaced' ? 'i' : '';
+  const size = v.height >= 720 || scan ? `${v.height}${scan}` : `${v.width ?? '?'}×${v.height}`;
+  // 1080p25 when the scan is known; otherwise the rate is set apart (1080@25) so it cannot read as part of the size.
+  const spec = !v.fps ? size : scan ? `${size}${v.fps}` : `${size}@${v.fps}`;
+  return [SHORT_CODEC[v.codec] ?? v.codec, spec].filter(Boolean).join(' · ');
 }
 const rate = (kbps) => (kbps >= 1000 ? `${(kbps / 1000).toFixed(1)} Mbps` : `${Math.round(kbps)} kbps`);
 /** Worst active alert on the channel, or null. */

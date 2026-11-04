@@ -27,8 +27,8 @@ Pulse on Ubuntu
    Sign-in: the page asks for a user name and password. Choose them with PULSE_USER and PULSE_PASSWORD
    (as a service: two Environment= lines in playprobe.service). If you set nothing, it is  skandha / skandha@123
    (built in, the same on every machine). Signing in lasts
-   12 hours (PULSE_SESSION_HOURS), five wrong passwords lock that address for a minute, and restarting
-   Pulse signs everyone out. The password travels unencrypted over http://, so keep to a trusted network
+   12 hours (PULSE_SESSION_HOURS), five wrong passwords lock that address for a minute, and changing the user name or password
+   signs everyone out (restarting or updating Pulse does not). The password travels unencrypted over http://, so keep to a trusted network
    or the SSH tunnel above (or put an https reverse proxy in front).
 
 5. SRT:

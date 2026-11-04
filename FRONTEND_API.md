@@ -6,7 +6,7 @@ In development the Vite server (port 5173) proxies `/__srt`, `/__proxy`, `/__app
 
 ## Sign-in (`/login`, `/__auth`)
 
-One shared user name and password, from `PULSE_USER` / `PULSE_PASSWORD` (default `skandha` / `skandha@123`). `PULSE_AUTH=off` disables it; `PULSE_SESSION_HOURS` sets how long a sign-in lasts (default 12). Sessions are kept in memory, so a restart signs everyone out. Five wrong passwords lock that address for a minute (429). The cookie is `HttpOnly` and `SameSite=Strict`. `POST /__app/quit` from the server's own machine needs no sign-in (the uninstaller uses it).
+One shared user name and password, from `PULSE_USER` / `PULSE_PASSWORD` (default `skandha` / `skandha@123`). `PULSE_AUTH=off` disables it; `PULSE_SESSION_HOURS` sets how long a sign-in lasts (default 12). Sessions are also saved (as hashes) in `.playprobe/sessions.json`, so a restart or an update does not sign anyone out; changing the user name or password does. Five wrong passwords lock that address for a minute (429). The cookie is `HttpOnly` and `SameSite=Strict`. `POST /__app/quit` from the server's own machine needs no sign-in (the uninstaller uses it).
 
 | Method | Path | Body | Result |
 | --- | --- | --- | --- |

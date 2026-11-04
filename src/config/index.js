@@ -83,6 +83,7 @@ export const config = {
     enabled: (process.env.PULSE_AUTH ?? '').toLowerCase() !== 'off',
     user: process.env.PULSE_USER || 'Skandha',
     password: process.env.PULSE_PASSWORD || 'Skandha@123',
+    storePath: join(appDir, '.playprobe', 'sessions.json'),
     sessionMs: (Number(process.env.PULSE_SESSION_HOURS) > 0 ? Number(process.env.PULSE_SESSION_HOURS) : 12) * 3600_000,
   },
 };

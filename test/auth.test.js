@@ -1,3 +1,6 @@
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createApp } from '../src/app.js';
 import { createAuth, readCookie } from '../src/services/auth.js';
@@ -22,6 +25,31 @@ describe('auth service', () => {
     auth.close(again);
     expect(auth.valid(again)).toBe(false);
     expect(auth.valid('')).toBe(false);
+  });
+
+  it('keeps sessions across a restart, but not after the password changes, expiry or sign-out', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'pulse-auth-'));
+    const storePath = join(dir, 'sessions.json');
+    try {
+      let t = 1000;
+      const opts = { user: 'a', password: 'b', sessionMs: 5000, now: () => t, storePath };
+      const first = createAuth(opts);
+      const kept = first.open();
+      const signedOut = first.open();
+      first.close(signedOut);
+      // The file holds no usable token.
+      expect(readFileSync(storePath, 'utf8')).not.toContain(kept);
+
+      const restarted = createAuth(opts);
+      expect(restarted.valid(kept)).toBe(true);
+      expect(restarted.valid(signedOut)).toBe(false);
+
+      expect(createAuth({ ...opts, password: 'changed' }).valid(kept)).toBe(false);
+      t += 6000;
+      expect(createAuth(opts).valid(kept)).toBe(false);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
 
   it('locks an address after repeated failures, then lets it try again', () => {

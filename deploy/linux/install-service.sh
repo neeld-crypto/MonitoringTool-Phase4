@@ -14,7 +14,7 @@ chmod +x start.sh
 
 sed -e "s|^User=.*|User=$user|" \
     -e "s|^WorkingDirectory=.*|WorkingDirectory=$dir|" \
-    -e "s|^ExecStart=.*|ExecStart=$dir/start.sh|" \
+    -e "s|^ExecStart=.*|ExecStart=/bin/bash $dir/start.sh|" \
     playprobe.service | $SUDO tee /etc/systemd/system/playprobe.service >/dev/null
 
 $SUDO systemctl daemon-reload

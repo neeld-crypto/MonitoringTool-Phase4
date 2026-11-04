@@ -17,7 +17,7 @@ Environment=PULSE_PASSWORD=Skandha@123
 #   sudo systemctl daemon-reload && sudo systemctl restart playprobe
 # Environment=SRT_WEBHOOK_URL=https://hooks.slack.com/services/XXXX/YYYY/ZZZZ
 # Environment=SRT_WEBHOOK_KIND=slack
-ExecStart=/home/CHANGE_ME/playprobe/start.sh
+ExecStart=/bin/bash /home/CHANGE_ME/playprobe/start.sh
 Restart=always
 RestartSec=3
 

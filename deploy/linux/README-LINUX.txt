@@ -10,19 +10,19 @@ Pulse on Ubuntu
      bash setup-ubuntu.sh
 
 3. Run:
-     ./start.sh
-   ./start.sh stops when the PuTTY window closes. To keep Pulse running after that, restart it if it crashes
-   and start it at boot, install it as a service ONCE (stop ./start.sh with Ctrl+C first):
+     bash start.sh
+   bash start.sh stops when the PuTTY window closes. To keep Pulse running after that, restart it if it crashes
+   and start it at boot, install it as a service ONCE (stop bash start.sh with Ctrl+C first):
      bash install-service.sh
    It opens the page on the server IP (HOST=0.0.0.0); logs of the service: journalctl -u playprobe -f
-   After that, never run ./start.sh by hand; use  sudo systemctl restart|stop|status playprobe .
+   After that, never run bash start.sh by hand; use  sudo systemctl restart|stop|status playprobe .
 
 4. Open the page from your PC with an SSH tunnel (nothing is exposed to the network, and the
    page is plain HTTP, so do NOT bind it to a public address):
      PuTTY > Connection > SSH > Tunnels:  Source port 4173, Destination 127.0.0.1:4173, Add, then Open the session
    (or from a Windows terminal:  ssh -L 4173:127.0.0.1:4173 USER@SERVER_IP)
    Then browse to  http://localhost:4173/  on your PC.
-   To open it by the server IP instead (trusted network only):  PULSE_USER=you PULSE_PASSWORD=secret HOST=0.0.0.0 ./start.sh  then  http://SERVER_IP:4173/
+   To open it by the server IP instead (trusted network only):  PULSE_USER=you PULSE_PASSWORD=secret HOST=0.0.0.0 bash start.sh  then  http://SERVER_IP:4173/
 
    Sign-in: the page asks for a user name and password. Choose them with PULSE_USER and PULSE_PASSWORD
    (as a service: two Environment= lines in playprobe.service). If you set nothing, it is  skandha / skandha@123
@@ -39,7 +39,7 @@ Pulse on Ubuntu
      opened in their security group.
 
 6. Check the load while channels run:
-     ./load-report.sh 5
+     bash load-report.sh 5
    (the SRT panel in the web page also shows machine / server / ffmpeg load live), or  htop .
 
 Files, all created in this folder:

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Prints how much CPU and memory PlayProbe, ffmpeg and srt-live-transmit use. Run it while channels are running:
-#   ./load-report.sh          one report
-#   ./load-report.sh 5        a new report every 5 seconds (Ctrl+C to stop)
+#   bash load-report.sh          one report
+#   bash load-report.sh 5        a new report every 5 seconds (Ctrl+C to stop)
 interval="${1:-0}"
 report() {
   echo "=== $(date '+%F %T')  cores: $(nproc)  load average: $(cut -d' ' -f1-3 /proc/loadavg)"

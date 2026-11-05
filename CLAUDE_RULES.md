@@ -7,4 +7,5 @@
 - Never commit secrets: `.playprobe/` (saved settings, webhooks), `logs/` and `release/` stay out of git.
 - The monitoring APIs start processes. They sit behind one shared user name and password (PULSE_USER / PULSE_PASSWORD, default skandha / skandha@123), but the page is plain HTTP: bind to localhost or a trusted network only.
 - Add or update a Vitest test for every parser, alert rule or service change. `npm test` must pass before merging.
-- Branches: `development` for work, `staging` for testing, `main` for releases.
+- Branches: `development` for all coding, `staging` for all testing (full suites, build, `npm audit`, smoke test of the packaged build), `main` for production. Code only moves development → staging → main; nothing reaches `main` untested, and `main` is updated only after an explicit go-ahead.
+- Every change is pushed to `development`; the Linux package (`npm run build:linux`) is rebuilt with it.

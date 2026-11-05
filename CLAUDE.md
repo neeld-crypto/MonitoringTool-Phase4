@@ -31,7 +31,7 @@ deploy/linux/        Ubuntu helper scripts; scripts/ builds the Linux and Window
 
 - `npm run install:all`, then `npm run build` (builds the frontend), `npm start` (http://localhost:4173)
 - `npm run dev` (backend with reload) and `npm --prefix frontend run dev` (frontend on 5173, proxying to the backend)
-- `npm test` (backend) and `npm run test:frontend`
+- `npm test` (backend) and `npm run test:frontend`; `PULSE_E2E=1 npx vitest run test/e2e-srt.test.js` runs the real-SRT end-to-end test (needs ffmpeg with SRT, about 25 s)
 - `npm run build:linux`, `npm run build:exe`
 
 ## Rules

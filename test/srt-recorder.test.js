@@ -1,8 +1,9 @@
-import { mkdirSync, mkdtempSync, rmSync, utimesSync, writeFileSync } from 'node:fs';
+import { spawn, spawnSync } from 'node:child_process';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, utimesSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { SEGMENT_FILE, buildRecordArgs, listSegments, pruneSegments, segmentStart } from '../src/services/srt/recorder.js';
+import { Recorder, SEGMENT_FILE, buildRecordArgs, listSegments, pruneSegments, segmentStart } from '../src/services/srt/recorder.js';
 
 let dir;
 beforeEach(() => {
@@ -57,4 +58,56 @@ describe('recording segments', () => {
     expect(pruneSegments(dir, 24 * 3600_000)).toBe(1);
     expect(listSegments(dir).map((s) => s.name)).toEqual(['20261103_100000.ts']);
   });
+});
+
+const hasFfmpeg = spawnSync('ffmpeg', ['-version']).status === 0;
+const hasFfprobe = spawnSync('ffprobe', ['-version']).status === 0;
+
+describe.skipIf(!hasFfmpeg)('recorder with a real ffmpeg', () => {
+  /** Plays a small test stream into the recorder for `seconds` and returns once ffmpeg has finished the files. */
+  const record = (segmentSec, seconds) =>
+    new Promise((resolve) => {
+      const logs = [];
+      const rec = new Recorder({ ffmpegPath: 'ffmpeg', dir, segmentSec, keepHours: 24, onLog: (l) => logs.push(l) });
+      rec.start();
+      const src = spawn(
+        'ffmpeg',
+        ['-loglevel', 'error', '-re', '-f', 'lavfi', '-i', 'testsrc=size=320x180:rate=25', '-f', 'lavfi', '-i', 'sine=frequency=440',
+          '-t', String(seconds), '-c:v', 'libx264', '-g', '25', '-c:a', 'aac', '-f', 'mpegts', 'pipe:1'],
+        { stdio: ['ignore', 'pipe', 'ignore'] },
+      );
+      src.stdout.on('data', (c) => rec.write(c));
+      src.on('close', () => {
+        rec.stop();
+        setTimeout(() => resolve({ logs, active: rec.active }), 3500);
+      });
+    });
+
+  // ffmpeg reads about 5 s of the feed to probe it and then writes that burst at once, and files are named by the
+  // second they are opened. The app's shortest segment is 5 minutes, so these tests use one long segment.
+  it('writes a playable transport-stream file that holds the whole feed', async () => {
+    const { logs, active } = await record(300, 8);
+    const files = listSegments(dir);
+    expect(files).toHaveLength(1);
+    expect(logs).toEqual([]);
+    expect(active).toBe(false);
+    const [f] = files;
+    expect(f.size).toBeGreaterThan(100_000);
+    // Every MPEG-TS packet starts with the sync byte 0x47.
+    const head = readFileSync(join(dir, f.name)).subarray(0, 188 * 4);
+    expect([0, 188, 376, 564].map((i) => head[i])).toEqual([0x47, 0x47, 0x47, 0x47]);
+    // Stopping closes the file properly: nothing of the 8 s feed is lost.
+    if (hasFfprobe) {
+      const out = spawnSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', join(dir, f.name)]);
+      expect(Number(String(out.stdout).trim())).toBeGreaterThan(7);
+    }
+  }, 30_000);
+
+  it('can be stopped and started again without mixing up files', async () => {
+    await record(60, 3);
+    const first = listSegments(dir).length;
+    await new Promise((r) => setTimeout(r, 1100));
+    await record(60, 3);
+    expect(listSegments(dir).length).toBe(first + 1);
+  }, 30_000);
 });

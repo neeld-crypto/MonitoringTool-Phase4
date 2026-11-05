@@ -59,10 +59,25 @@ function groups(s, wire) {
       : []),
   ];
 }
-/** `alerts` is the channel's alert list (newest first). Rules that share a stem (`ts_pat`) are matched by name. */
-export function healthPanel(s, alerts) {
+/**
+ * What the checklist shows, without any DOM: per group, per row, the count, the live alert (if any) and the last
+ * time the check went wrong. `alerts` is the channel's alert list (newest first).
+ */
+export function healthModel(s, alerts) {
   const wire = s.tsSource === 'wire';
-  const sections = groups(s, wire).map((g) =>
+  const groupsOut = groups(s, wire).map((g) => ({
+    title: g.title,
+    rows: g.rows.map((r) => {
+      const mine = alerts.filter((x) => x.rule === r.rule && x.state !== 'event');
+      return { ...r, live: mine.find((x) => x.state === 'raised') ?? null, last: mine[0] ?? null };
+    }),
+  }));
+  const raised = alerts.filter((x) => x.state === 'raised');
+  return { groups: groupsOut, raised, problems: [...new Set(raised.map((x) => ruleLabel(x.rule)))] };
+}
+export function healthPanel(s, alerts) {
+  const model = healthModel(s, alerts);
+  const sections = model.groups.map((g) =>
     h(
       'div',
       { class: 'health-group' },
@@ -74,9 +89,7 @@ export function healthPanel(s, alerts) {
           'tbody',
           null,
           g.rows.map((r) => {
-            const mine = alerts.filter((x) => x.rule === r.rule && x.state !== 'event');
-            const live = mine.find((x) => x.state === 'raised');
-            const last = mine[0];
+            const { live, last } = r;
             return h(
               'tr',
               { class: live ? 'bad' : 'good' },
@@ -98,13 +111,9 @@ export function healthPanel(s, alerts) {
       ),
     ),
   );
-  const raised = alerts.filter((x) => x.state === 'raised');
-  const summary = raised.length
-    ? h(
-        'p',
-        { class: 'srt-notice error' },
-        `${raised.length} problem${raised.length === 1 ? '' : 's'} right now: ${[...new Set(raised.map((x) => ruleLabel(x.rule)))].join(', ')}`,
-      )
+  const n = model.raised.length;
+  const summary = n
+    ? h('p', { class: 'srt-notice error' }, `${n} problem${n === 1 ? '' : 's'} right now: ${model.problems.join(', ')}`)
     : h('p', { class: 'srt-notice' }, 'Stream is healthy: every check is passing.');
   return h('div', { class: 'health' }, summary, ...sections);
 }
